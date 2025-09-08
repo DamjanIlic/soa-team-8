@@ -22,6 +22,7 @@ func initDB() *gorm.DB {
 
 	// Auto migrate tabele
 	db.AutoMigrate(&model.Stakeholder{})
+	db.AutoMigrate(&model.User{})
 
 	return db
 }
@@ -29,20 +30,27 @@ func initDB() *gorm.DB {
 func main() {
 	database := initDB()
 
-	repo := &repo.StakeholderRepository{DatabaseConnection: database}
-	service := &service.StakeholderService{StakeholderRepo: repo}
-	handler := &handler.StakeholderHandler{StakeholderService: service}
+	stakeholderRepo := &repo.StakeholderRepository{DatabaseConnection: database}
+	stakeholderService := &service.StakeholderService{StakeholderRepo: stakeholderRepo}
+	stakeholderHandler := &handler.StakeholderHandler{StakeholderService: stakeholderService}
 
-	startServer(handler)
+	userRepo := &repo.UserRepo{DatabaseConnection: database}
+	userService := &service.UserService{UserRepo: userRepo}
+	userHandler := &handler.UserHandler{UserService: userService}
+
+	startServer(stakeholderHandler, userHandler)
 }
 
-func startServer(handler *handler.StakeholderHandler) {
+func startServer(handler *handler.StakeholderHandler, userHandler *handler.UserHandler) {
 	router := mux.NewRouter().StrictSlash(true)
 
 	api := router.PathPrefix("/api").Subrouter()
 
 	api.HandleFunc("/stakeholders/{id}", handler.Get).Methods("GET")
 	api.HandleFunc("/stakeholders", handler.Create).Methods("POST")
+
+	//admin
+	api.HandleFunc("/admin/users", userHandler.GetAllUsers).Methods("GET")
 
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static")))
 
