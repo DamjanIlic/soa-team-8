@@ -5,18 +5,33 @@ import (
 	"gorm.io/gorm"
 )
 
+type Role string
+
+const (
+	RoleTourist Role = "tourist"
+	RoleGuide   Role = "guide"
+	RoleAdmin   Role = "admin"
+)
+
 type User struct {
 	ID       uuid.UUID `json:"id"`
 	Username string    `gorm:"uniqueIndex" json:"username"`
 	Email    string    `gorm:"uniqueIndex" json:"email"`
 	Password string    `json:"-"`
-	Role     string    `json:"role"`
+	Role     Role      `json:"role"`
 }
 
 type UserResponse struct {
 	ID       string `json:"id"`
 	Username string `json:"username"`
 	Email    string `json:"email"`
+	Role     string `json:"role"`
+}
+
+type UserRequest struct {
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 	Role     string `json:"role"`
 }
 

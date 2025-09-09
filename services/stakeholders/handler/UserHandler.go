@@ -20,10 +20,40 @@ func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 			ID:       u.ID.String(),
 			Username: u.Username,
 			Email:    u.Email,
-			Role:     u.Role,
+			Role:     string(u.Role),
 		})
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
+}
+
+func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
+	var req model.UserRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	user := &model.User{
+		Username: req.Username,
+		Email:    req.Email,
+		Password: req.Password,
+		Role:     model.Role(req.Role), // cast na tip Role
+	}
+
+	if err := h.UserService.RegisterUser(user); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	resp := model.UserResponse{
+		ID:       user.ID.String(),
+		Username: user.Username,
+		Email:    user.Email,
+		Role:     string(user.Role),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resp)
 }

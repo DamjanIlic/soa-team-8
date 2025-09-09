@@ -73,6 +73,9 @@ func startServer(handler *handler.StakeholderHandler, userHandler *handler.UserH
 	// admin endpoint
 	api.HandleFunc("/admin/users", userHandler.GetAllUsers).Methods("GET")
 
+	// endpoint za registraciju neregistrovanih korisnika
+	api.HandleFunc("/register", userHandler.RegisterUser).Methods("POST")
+
 	// static fajlovi
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static")))
 
