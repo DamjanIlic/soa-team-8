@@ -21,6 +21,15 @@ func (h *BlogHandler) Create(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(blog)
 }
 
+func (h *BlogHandler) GetAll(w http.ResponseWriter, r *http.Request) {
+	blogs, err := h.BlogService.GetAll()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(blogs)
+}
+
 func (h *BlogHandler) Get(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 	blog, err := h.BlogService.Get(id)

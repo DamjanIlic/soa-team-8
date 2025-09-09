@@ -10,7 +10,8 @@ import (
 type Blog struct {
 	ID        uuid.UUID `json:"id"`
 	Title     string    `json:"title" gorm:"not null"`
-	Content   string    `json:"content"`
+	Content   string    `json:"content"` // markdown na frontu
+	ImageURL  string    `json:"image_url,omitempty"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Likes     int       `json:"likes"`

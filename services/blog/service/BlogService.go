@@ -13,6 +13,10 @@ func (s *BlogService) Create(blog *model.Blog) error {
 	return s.BlogRepo.Create(blog)
 }
 
+func (s *BlogService) GetAll() ([]model.Blog, error) {
+	return s.BlogRepo.GetAll()
+}
+
 func (s *BlogService) Get(id string) (*model.Blog, error) {
 	return s.BlogRepo.Get(id)
 }

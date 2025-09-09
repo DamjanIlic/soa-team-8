@@ -2,6 +2,7 @@ package main
 
 import (
 	"blog/handler"
+	"blog/model"
 	"blog/repo"
 	"blog/service"
 	"fmt"
@@ -15,38 +16,21 @@ import (
 	"gorm.io/gorm"
 )
 
-func main() {
-	dbHost := os.Getenv("DB_HOST")
-	dbUser := os.Getenv("DB_USER")
-	dbPassword := os.Getenv("DB_PASSWORD")
-	dbName := os.Getenv("DB_NAME")
-	dbPort := os.Getenv("DB_PORT")
-
-	if dbHost == "" {
-		dbHost = "localhost"
-	}
-	if dbUser == "" {
-		dbUser = "postgres"
-	}
-	if dbPassword == "" {
-		dbPassword = "postgres"
-	}
-	if dbName == "" {
-		dbName = "blog"
-	}
-	if dbPort == "" {
-		dbPort = "5432"
-	}
+func initDB() *gorm.DB {
+	dbHost := getEnv("DB_HOST", "localhost")
+	dbUser := getEnv("DB_USER", "postgres")
+	dbPassword := getEnv("DB_PASSWORD", "postgres")
+	dbName := getEnv("DB_NAME", "blog")
+	dbPort := getEnv("DB_PORT", "5432")
 
 	dsn := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Europe/Belgrade",
 		dbHost, dbUser, dbPassword, dbName, dbPort,
 	)
 
 	var db *gorm.DB
 	var err error
 
-	// Retry loop dok se ne povežemo na bazu
 	for i := 0; i < 10; i++ {
 		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 		if err == nil {
@@ -55,24 +39,40 @@ func main() {
 		log.Printf("DB connection failed, retrying in 3s... (%d/10)\n", i+1)
 		time.Sleep(3 * time.Second)
 	}
+
 	if err != nil {
 		log.Fatal("Failed to connect to DB: ", err)
 	}
 
-	blogRepo := &repo.BlogRepository{DatabaseConnection: db}
+	if err := db.AutoMigrate(&model.Blog{}); err != nil {
+		log.Fatal("Failed to auto-migrate Blog table: ", err)
+	}
+
+	return db
+}
+
+func getEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
+}
+
+func main() {
+	database := initDB()
+
+	blogRepo := &repo.BlogRepository{DatabaseConnection: database}
 	blogService := &service.BlogService{BlogRepo: blogRepo}
 	blogHandler := &handler.BlogHandler{BlogService: blogService}
 
 	r := mux.NewRouter()
 	r.HandleFunc("/blogs", blogHandler.Create).Methods("POST")
+	r.HandleFunc("/blogs", blogHandler.GetAll).Methods("GET")
 	r.HandleFunc("/blogs/{id}", blogHandler.Get).Methods("GET")
 	r.HandleFunc("/blogs/{id}/like", blogHandler.Like).Methods("POST")
 	r.HandleFunc("/blogs/{id}/unlike", blogHandler.Unlike).Methods("POST")
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
+	port := getEnv("PORT", "8080")
 
 	log.Printf("Blog service running on :%s\n", port)
 	log.Fatal(http.ListenAndServe(":"+port, r))

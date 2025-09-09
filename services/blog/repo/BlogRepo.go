@@ -14,6 +14,12 @@ func (r *BlogRepository) Create(blog *model.Blog) error {
 	return r.DatabaseConnection.Create(blog).Error
 }
 
+func (r *BlogRepository) GetAll() ([]model.Blog, error) {
+	var blogs []model.Blog
+	result := r.DatabaseConnection.Find(&blogs)
+	return blogs, result.Error
+}
+
 func (r *BlogRepository) Get(id string) (*model.Blog, error) {
 	var blog model.Blog
 	result := r.DatabaseConnection.First(&blog, "id = ?", id)
