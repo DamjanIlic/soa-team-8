@@ -3,6 +3,7 @@ package repo
 import (
 	"stakeholder/model"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -15,7 +16,17 @@ func (r *StakeholderRepository) Create(stakeholder *model.Stakeholder) error {
 }
 
 func (r *StakeholderRepository) Get(id string) (*model.Stakeholder, error) {
-	var stakeholder model.Stakeholder
-	result := r.DatabaseConnection.First(&stakeholder, "id = ?", id)
-	return &stakeholder, result.Error
+	var s model.Stakeholder
+
+	// konvertuj string u UUID
+	uid, err := uuid.Parse(id)
+	if err != nil {
+		return nil, err
+	}
+
+	// GORM query
+	if err := r.DatabaseConnection.First(&s, "id = ?", uid).Error; err != nil {
+		return nil, err
+	}
+	return &s, nil
 }
