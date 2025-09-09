@@ -2,6 +2,7 @@ package main
 
 import (
 	"blog/handler"
+	"blog/model"
 	"blog/repo"
 	"blog/service"
 	"fmt"
@@ -46,7 +47,6 @@ func main() {
 	var db *gorm.DB
 	var err error
 
-	// Retry loop dok se ne povežemo na bazu
 	for i := 0; i < 10; i++ {
 		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 		if err == nil {
@@ -59,15 +59,29 @@ func main() {
 		log.Fatal("Failed to connect to DB: ", err)
 	}
 
+	// Auto-migrate tabele
+	err = db.AutoMigrate(&model.Blog{}, &model.Comment{})
+	if err != nil {
+		log.Fatal("Failed to auto-migrate tables: ", err)
+	}
+
 	blogRepo := &repo.BlogRepository{DatabaseConnection: db}
 	blogService := &service.BlogService{BlogRepo: blogRepo}
 	blogHandler := &handler.BlogHandler{BlogService: blogService}
+
+	commentRepo := &repo.CommentRepository{DB: db}
+	commentService := &service.CommentService{CommentRepo: commentRepo}
+	commentHandler := &handler.CommentHandler{CommentService: commentService}
 
 	r := mux.NewRouter()
 	r.HandleFunc("/blogs", blogHandler.Create).Methods("POST")
 	r.HandleFunc("/blogs/{id}", blogHandler.Get).Methods("GET")
 	r.HandleFunc("/blogs/{id}/like", blogHandler.Like).Methods("POST")
 	r.HandleFunc("/blogs/{id}/unlike", blogHandler.Unlike).Methods("POST")
+
+	//comment
+	r.HandleFunc("/blogs/{id}/comments", commentHandler.Create).Methods("POST")
+	r.HandleFunc("/blogs/{id}/comments", commentHandler.GetByBlogID).Methods("GET")
 
 	port := os.Getenv("PORT")
 	if port == "" {
