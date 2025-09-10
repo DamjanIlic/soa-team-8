@@ -30,5 +30,35 @@ services:
     depends_on:
       - stakeholders-db
 
+  tour-db:
+    image: postgres:15
+    container_name: tour-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: super
+      POSTGRES_DB: tourdb
+    ports:
+      - "5434:5432"
+    volumes:
+      - tour-data:/var/lib/postgresql/data
+
+  tour-service:
+    build:
+      context: ./services/tour
+      dockerfile: Dockerfile
+    container_name: tour-service
+    environment:
+      DB_HOST: tour-db
+      DB_USER: postgres
+      DB_PASSWORD: super
+      DB_NAME: tourdb
+      DB_PORT: 5432
+      PORT: 8080
+    ports:
+      - "8083:8080"
+    depends_on:
+      - tour-db
+
 volumes:
   stakeholders-data:
+  tour-data:
