@@ -76,6 +76,7 @@ func startServer(handler *handler.StakeholderHandler, userHandler *handler.UserH
 	// endpoint za registraciju neregistrovanih korisnika
 	api.HandleFunc("/register", userHandler.RegisterUser).Methods("POST")
 
+	//stakeholder db
 	api.HandleFunc("/profile/{userId}", handler.GetProfile).Methods("GET")
 	api.HandleFunc("/profile/{userId}", handler.UpdateProfile).Methods("PUT")
 

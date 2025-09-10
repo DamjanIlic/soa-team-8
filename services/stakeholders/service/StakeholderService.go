@@ -3,6 +3,7 @@ package service
 import (
 	"stakeholder/model"
 	"stakeholder/repo"
+
 	"github.com/google/uuid"
 )
 
@@ -11,6 +12,7 @@ type StakeholderService struct {
 }
 
 func (s *StakeholderService) Create(stakeholder *model.Stakeholder) error {
+	//
 	return s.StakeholderRepo.Create(stakeholder)
 }
 
@@ -23,12 +25,12 @@ func (s *StakeholderService) GetProfile(userID string) (*model.ProfileResponse, 
 	if err != nil {
 		return nil, err
 	}
-	
+
 	stakeholder, err := s.StakeholderRepo.GetByUserID(uid)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	profile := &model.ProfileResponse{
 		ID:           stakeholder.ID.String(),
 		Username:     stakeholder.User.Username,
@@ -40,7 +42,7 @@ func (s *StakeholderService) GetProfile(userID string) (*model.ProfileResponse, 
 		Biography:    stakeholder.Biography,
 		Motto:        stakeholder.Motto,
 	}
-	
+
 	return profile, nil
 }
 
@@ -49,12 +51,12 @@ func (s *StakeholderService) UpdateProfile(userID string, updates map[string]int
 	if err != nil {
 		return err
 	}
-	
+
 	stakeholder, err := s.StakeholderRepo.GetByUserID(uid)
 	if err != nil {
 		return err
 	}
-	
+
 	// update polja
 	if name, ok := updates["name"].(string); ok {
 		stakeholder.Name = name
@@ -71,6 +73,6 @@ func (s *StakeholderService) UpdateProfile(userID string, updates map[string]int
 	if profileImage, ok := updates["profile_image"].(string); ok {
 		stakeholder.ProfileImage = &profileImage
 	}
-	
+
 	return s.StakeholderRepo.Update(stakeholder)
 }

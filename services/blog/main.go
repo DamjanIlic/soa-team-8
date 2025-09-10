@@ -51,6 +51,23 @@ func initDB() *gorm.DB {
 	return db
 }
 
+// func main() {
+// 	database := initDB()
+// 	db := database
+// 	// blogRepo := &repo.BlogRepository{DatabaseConnection: database}
+// 	// // Auto-migrate tabele
+// 	// err = db.AutoMigrate(&model.Blog{}, &model.Comment{})
+// 	// if err != nil {
+// 	// 	log.Fatal("Failed to auto-migrate tables: ", err)
+// 	// }
+
+// 	if err := db.AutoMigrate(&model.Blog{}); err != nil {
+// 		log.Fatal("Failed to auto-migrate Blog table: ", err)
+// 	}
+
+// 	return db
+// }
+
 func getEnv(key, fallback string) string {
 	if value, ok := os.LookupEnv(key); ok {
 		return value
@@ -60,10 +77,14 @@ func getEnv(key, fallback string) string {
 
 func main() {
 	database := initDB()
-
+	db := database
 	blogRepo := &repo.BlogRepository{DatabaseConnection: database}
 	blogService := &service.BlogService{BlogRepo: blogRepo}
 	blogHandler := &handler.BlogHandler{BlogService: blogService}
+
+	commentRepo := &repo.CommentRepository{DB: db}
+	commentService := &service.CommentService{CommentRepo: commentRepo}
+	commentHandler := &handler.CommentHandler{CommentService: commentService}
 
 	r := mux.NewRouter()
 	r.HandleFunc("/blogs", blogHandler.Create).Methods("POST")
@@ -71,6 +92,11 @@ func main() {
 	r.HandleFunc("/blogs/{id}", blogHandler.Get).Methods("GET")
 	r.HandleFunc("/blogs/{id}/like", blogHandler.Like).Methods("POST")
 	r.HandleFunc("/blogs/{id}/unlike", blogHandler.Unlike).Methods("POST")
+
+	//port := getEnv("PORT", "8080")
+	//comment
+	r.HandleFunc("/blogs/{id}/comments", commentHandler.Create).Methods("POST")
+	r.HandleFunc("/blogs/{id}/comments", commentHandler.GetByBlogID).Methods("GET")
 
 	port := getEnv("PORT", "8080")
 
