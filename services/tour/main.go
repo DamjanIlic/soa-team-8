@@ -34,6 +34,7 @@ func initDB() *gorm.DB {
 
 	// Auto migrate tabele
 	db.AutoMigrate(&model.Tour{})
+	db.AutoMigrate(&model.KeyPoint{})
 
 	return db
 }
@@ -48,14 +49,25 @@ func getEnv(key, fallback string) string {
 func main() {
 	database := initDB()
 
+	// Repository instances
 	tourRepo := &repo.TourRepository{DatabaseConnection: database}
-	tourService := &service.TourService{TourRepo: tourRepo}
-	tourHandler := &handler.TourHandler{TourService: tourService}
+	keyPointRepo := &repo.KeyPointRepository{DatabaseConnection: database}
 
-	startServer(tourHandler)
+	// Service instances
+	tourService := &service.TourService{TourRepo: tourRepo}
+	keyPointService := &service.KeyPointService{
+		KeyPointRepo: keyPointRepo,
+		TourRepo:     tourRepo,
+	}
+
+	// Handler instances
+	tourHandler := &handler.TourHandler{TourService: tourService}
+	keyPointHandler := &handler.KeyPointHandler{KeyPointService: keyPointService}
+
+	startServer(tourHandler, keyPointHandler)
 }
 
-func startServer(tourHandler *handler.TourHandler) {
+func startServer(tourHandler *handler.TourHandler, keyPointHandler *handler.KeyPointHandler) {
 	router := mux.NewRouter().StrictSlash(true)
 
 	api := router.PathPrefix("/api").Subrouter()
@@ -65,6 +77,13 @@ func startServer(tourHandler *handler.TourHandler) {
 	api.HandleFunc("/tours/{id}", tourHandler.GetTour).Methods("GET")
 	api.HandleFunc("/tours", tourHandler.GetAllTours).Methods("GET")
 	api.HandleFunc("/authors/{authorId}/tours", tourHandler.GetToursByAuthor).Methods("GET")
+
+	// KeyPoint endpoints
+	api.HandleFunc("/tours/{tourId}/keypoints", keyPointHandler.CreateKeyPoint).Methods("POST")
+	api.HandleFunc("/tours/{tourId}/keypoints", keyPointHandler.GetKeyPointsByTour).Methods("GET")
+	api.HandleFunc("/keypoints/{id}", keyPointHandler.GetKeyPoint).Methods("GET")
+	api.HandleFunc("/keypoints/{id}", keyPointHandler.UpdateKeyPoint).Methods("PUT")
+	api.HandleFunc("/keypoints/{id}", keyPointHandler.DeleteKeyPoint).Methods("DELETE")
 
 	// static fajlovi
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static")))

@@ -12,6 +12,12 @@ services:
       - "5433:5432"
     volumes:
       - stakeholders-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 
   stakeholders-service:
     build:
@@ -28,7 +34,9 @@ services:
     ports:
       - "8082:8080"
     depends_on:
-      - stakeholders-db
+      stakeholders-db:
+        condition: service_healthy
+
 
   tour-db:
     image: postgres:15
@@ -41,6 +49,12 @@ services:
       - "5434:5432"
     volumes:
       - tour-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 
   tour-service:
     build:
@@ -57,7 +71,8 @@ services:
     ports:
       - "8083:8080"
     depends_on:
-      - tour-db
+      tour-db:
+         condition: service_healthy
 
 volumes:
   stakeholders-data:
