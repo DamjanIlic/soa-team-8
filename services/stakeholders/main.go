@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"stakeholder/handler"
 	"stakeholder/model"
 	"stakeholder/repo"
@@ -14,7 +16,18 @@ import (
 )
 
 func initDB() *gorm.DB {
-	dsn := "host=localhost user=postgres password=super dbname=stakeholdersdb port=5432 sslmode=disable TimeZone=Europe/Belgrade"
+	// čitaj konfiguraciju iz environmenta, sa fallback vrednostima
+	host := getEnv("DB_HOST", "stakeholders-db")
+	user := getEnv("DB_USER", "postgres")
+	password := getEnv("DB_PASSWORD", "super")
+	dbname := getEnv("DB_NAME", "stakeholdersdb")
+	port := getEnv("DB_PORT", "5432")
+
+	dsn := fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Europe/Belgrade",
+		host, user, password, dbname, port,
+	)
+
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
@@ -22,21 +35,34 @@ func initDB() *gorm.DB {
 
 	// Auto migrate tabele
 	db.AutoMigrate(&model.Stakeholder{})
+	db.AutoMigrate(&model.User{})
 
 	return db
+}
+
+// getEnv čita env var, fallback ako nije definisana
+func getEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
 }
 
 func main() {
 	database := initDB()
 
-	repo := &repo.StakeholderRepository{DatabaseConnection: database}
-	service := &service.StakeholderService{StakeholderRepo: repo}
-	handler := &handler.StakeholderHandler{StakeholderService: service}
+	stakeholderRepo := &repo.StakeholderRepository{DatabaseConnection: database}
+	stakeholderService := &service.StakeholderService{StakeholderRepo: stakeholderRepo}
+	stakeholderHandler := &handler.StakeholderHandler{StakeholderService: stakeholderService}
 
-	startServer(handler)
+	userRepo := &repo.UserRepo{DatabaseConnection: database}
+	userService := &service.UserService{UserRepo: userRepo}
+	userHandler := &handler.UserHandler{UserService: userService}
+
+	startServer(stakeholderHandler, userHandler)
 }
 
-func startServer(handler *handler.StakeholderHandler) {
+func startServer(handler *handler.StakeholderHandler, userHandler *handler.UserHandler) {
 	router := mux.NewRouter().StrictSlash(true)
 
 	api := router.PathPrefix("/api").Subrouter()
@@ -44,8 +70,17 @@ func startServer(handler *handler.StakeholderHandler) {
 	api.HandleFunc("/stakeholders/{id}", handler.Get).Methods("GET")
 	api.HandleFunc("/stakeholders", handler.Create).Methods("POST")
 
+	// admin endpoint
+	api.HandleFunc("/admin/users", userHandler.GetAllUsers).Methods("GET")
+
+	// endpoint za registraciju neregistrovanih korisnika
+	api.HandleFunc("/register", userHandler.RegisterUser).Methods("POST")
+
+	// static fajlovi
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static")))
 
-	log.Println("Server starting on :8080")
-	log.Fatal(http.ListenAndServe(":8080", router))
+	// port iz env varijable, fallback 8080
+	port := getEnv("PORT", "8080")
+	log.Printf("Server starting on :%s\n", port)
+	log.Fatal(http.ListenAndServe(":"+port, router))
 }
