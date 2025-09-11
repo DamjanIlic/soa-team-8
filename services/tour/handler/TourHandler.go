@@ -14,20 +14,20 @@ type TourHandler struct {
 }
 
 func (h *TourHandler) CreateTour(w http.ResponseWriter, r *http.Request) {
-	// hardkodovan authorID, kasnije dodati auth
-	authorID := r.Header.Get("Author-ID")
-	if authorID == "" {
-		http.Error(w, "Author-ID header required", http.StatusBadRequest)
-		return
-	}
-
+	// kasnije dodati auth
+	// parsira JSON telo u TourRequest
 	var req model.TourRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	tour, err := h.TourService.CreateTour(authorID, &req)
+	if req.AuthorID == "" {
+		http.Error(w, "AuthorID required", http.StatusBadRequest)
+		return
+	}
+
+	tour, err := h.TourService.CreateTour(req.AuthorID, &req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
