@@ -19,7 +19,9 @@ type User struct {
 	Email    string    `gorm:"uniqueIndex" json:"email"`
 	Password string    `json:"-"`
 	Role     Role      `json:"role"`
+	Blocked  bool      `gorm:"default:false" json:"blocked"` 
 }
+
 
 type UserResponse struct {
 	ID       string `json:"id"`

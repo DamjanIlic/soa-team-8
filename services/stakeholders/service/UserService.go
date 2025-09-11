@@ -33,3 +33,14 @@ func (s *UserService) RegisterUser(user *model.User) error {
 
 	return s.UserRepo.Create(user)
 }
+
+func (s *UserService) BlockUser(userID string) error {
+	user, err := s.UserRepo.FindByID(userID)
+	if err != nil {
+		return err
+	}
+
+	user.Blocked = true
+	return s.UserRepo.Update(user)
+}
+
