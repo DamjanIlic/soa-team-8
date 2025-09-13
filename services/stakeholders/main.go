@@ -80,14 +80,14 @@ func startServer(handler *handler.StakeholderHandler, userHandler *handler.UserH
 	api.HandleFunc("/profile/{userId}", handler.GetProfile).Methods("GET")
 	api.HandleFunc("/profile/{userId}", handler.UpdateProfile).Methods("PUT")
 
-	// blokiranje korisnika (admin funkcionalnost)
+	
 	api.HandleFunc("/admin/users/{id}/block", userHandler.BlockUser).Methods("PUT")
 
 
-	// static fajlovi
+	
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static")))
 
-	// port iz env varijable, fallback 8080
+	
 	port := getEnv("PORT", "8080")
 	log.Printf("Server starting on :%s\n", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
