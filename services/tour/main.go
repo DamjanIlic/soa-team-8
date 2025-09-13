@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"tour/handler"
+	"tour/middleware"
 	"tour/model"
 	"tour/repo"
 	"tour/service"
@@ -32,7 +33,6 @@ func initDB() *gorm.DB {
 		log.Fatal("Failed to connect to database:", err)
 	}
 
-	// Auto migrate tabele
 	db.AutoMigrate(&model.Tour{})
 	db.AutoMigrate(&model.KeyPoint{})
 
@@ -47,20 +47,17 @@ func getEnv(key, fallback string) string {
 }
 
 func main() {
-	database := initDB()
+	db := initDB()
 
-	// Repository instances
-	tourRepo := &repo.TourRepository{DatabaseConnection: database}
-	keyPointRepo := &repo.KeyPointRepository{DatabaseConnection: database}
+	tourRepo := &repo.TourRepository{DatabaseConnection: db}
+	keyPointRepo := &repo.KeyPointRepository{DatabaseConnection: db}
 
-	// Service instances
 	tourService := &service.TourService{TourRepo: tourRepo}
 	keyPointService := &service.KeyPointService{
 		KeyPointRepo: keyPointRepo,
 		TourRepo:     tourRepo,
 	}
 
-	// Handler instances
 	tourHandler := &handler.TourHandler{TourService: tourService}
 	keyPointHandler := &handler.KeyPointHandler{KeyPointService: keyPointService}
 
@@ -70,7 +67,9 @@ func main() {
 func startServer(tourHandler *handler.TourHandler, keyPointHandler *handler.KeyPointHandler) {
 	router := mux.NewRouter().StrictSlash(true)
 
+	// JWT middleware na svim API rutama
 	api := router.PathPrefix("/api").Subrouter()
+	api.Use(middleware.JWTMiddleware)
 
 	// Tour endpoints
 	api.HandleFunc("/tours", tourHandler.CreateTour).Methods("POST")
@@ -85,8 +84,8 @@ func startServer(tourHandler *handler.TourHandler, keyPointHandler *handler.KeyP
 	api.HandleFunc("/keypoints/{id}", keyPointHandler.UpdateKeyPoint).Methods("PUT")
 	api.HandleFunc("/keypoints/{id}", keyPointHandler.DeleteKeyPoint).Methods("DELETE")
 
-	// static fajlovi
-	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static")))
+	// Staticki fajlovi
+	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static/")))
 
 	port := getEnv("PORT", "8080")
 	log.Printf("Tour service starting on :%s\n", port)

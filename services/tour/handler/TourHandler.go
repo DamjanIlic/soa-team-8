@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"tour/middleware"
 	"tour/model"
 	"tour/service"
 
@@ -14,20 +15,26 @@ type TourHandler struct {
 }
 
 func (h *TourHandler) CreateTour(w http.ResponseWriter, r *http.Request) {
-	// kasnije dodati auth
-	// parsira JSON telo u TourRequest
+	userID := r.Context().Value(middleware.ContextUserID)
+	role := r.Context().Value(middleware.ContextRole)
+
+	if userID == nil || role == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	if role.(string) != "guide" {
+		http.Error(w, "Forbidden: only guides can create tours", http.StatusForbidden)
+		return
+	}
+
 	var req model.TourRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	if req.AuthorID == "" {
-		http.Error(w, "AuthorID required", http.StatusBadRequest)
-		return
-	}
-
-	tour, err := h.TourService.CreateTour(req.AuthorID, &req)
+	tour, err := h.TourService.CreateTour(userID.(string), &req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
