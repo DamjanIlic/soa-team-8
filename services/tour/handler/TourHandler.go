@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"tour/middleware"
 	"tour/model"
 	"tour/service"
 
@@ -14,10 +15,16 @@ type TourHandler struct {
 }
 
 func (h *TourHandler) CreateTour(w http.ResponseWriter, r *http.Request) {
-	// hardkodovan authorID, kasnije dodati auth
-	authorID := r.Header.Get("Author-ID")
-	if authorID == "" {
-		http.Error(w, "Author-ID header required", http.StatusBadRequest)
+	userID := r.Context().Value(middleware.ContextUserID)
+	role := r.Context().Value(middleware.ContextRole)
+
+	if userID == nil || role == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	if role.(string) != "guide" {
+		http.Error(w, "Forbidden: only guides can create tours", http.StatusForbidden)
 		return
 	}
 
@@ -27,7 +34,7 @@ func (h *TourHandler) CreateTour(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tour, err := h.TourService.CreateTour(authorID, &req)
+	tour, err := h.TourService.CreateTour(userID.(string), &req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

@@ -24,3 +24,17 @@ func (blog *Blog) BeforeCreate(tx *gorm.DB) (err error) {
 	blog.Likes = 0
 	return
 }
+
+type Like struct {
+	ID        uuid.UUID `json:"id"`
+	UserID    uuid.UUID `json:"user_id" gorm:"not null"`
+	BlogID    uuid.UUID `json:"blog_id" gorm:"not null"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+func (l *Like) BeforeCreate(tx *gorm.DB) (err error) {
+	l.ID = uuid.New()
+	l.CreatedAt = time.Now()
+	return
+}
+

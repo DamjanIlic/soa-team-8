@@ -28,6 +28,7 @@ type Tour struct {
 }
 
 type TourRequest struct {
+	AuthorID    string `json:"author_id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Difficulty  string `json:"difficulty"`

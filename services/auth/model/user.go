@@ -14,14 +14,20 @@ const (
 )
 
 type User struct {
-	ID       uuid.UUID `json:"id"`
+	ID       uuid.UUID `json:"id" gorm:"primaryKey"`
 	Username string    `gorm:"uniqueIndex" json:"username"`
 	Email    string    `gorm:"uniqueIndex" json:"email"`
-	Password string    `json:"-"`
+	Password string    `json:"-"` // ne izlaži lozinku
 	Role     Role      `json:"role"`
-	Blocked  bool      `gorm:"default:false" json:"blocked"` 
+	Blocked  bool      `gorm:"default:false" json:"blocked"`
 }
 
+type UserRequest struct {
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	Role     string `json:"role"`
+}
 
 type UserResponse struct {
 	ID       string `json:"id"`
@@ -31,21 +37,13 @@ type UserResponse struct {
 	Blocked  bool   `json:"blocked"`
 }
 
-
-type UserRequest struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Role     string `json:"role"`
-}
-
-func (User) TableName() string {
-	return "users"
-}
-
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 	if u.ID == uuid.Nil {
 		u.ID = uuid.New()
 	}
 	return
+}
+
+func (User) TableName() string {
+	return "users"
 }

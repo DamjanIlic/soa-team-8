@@ -1,9 +1,11 @@
 package service
 
 import (
+	"auth-service/model"
+	"auth-service/repo"
 	"errors"
-	"stakeholder/model"
-	"stakeholder/repo"
+
+	"auth-service/util"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -12,10 +14,7 @@ type UserService struct {
 	UserRepo *repo.UserRepo
 }
 
-func (s *UserService) GetAllUsers() []model.User {
-	return s.UserRepo.FindAll()
-}
-
+// Registracija korisnika
 func (s *UserService) RegisterUser(user *model.User) error {
 	if user.Role != model.RoleTourist && user.Role != model.RoleGuide {
 		return errors.New("invalid role")
@@ -34,13 +33,31 @@ func (s *UserService) RegisterUser(user *model.User) error {
 	return s.UserRepo.Create(user)
 }
 
+// Login korisnika i vraćanje JWT tokena
+func (s *UserService) Login(email, password string) (string, error) {
+	user, err := s.UserRepo.FindByEmail(email)
+	if err != nil {
+		return "", errors.New("invalid credentials")
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+		return "", errors.New("invalid credentials")
+	}
+
+	token, err := util.GenerateJWT(user.ID.String(), string(user.Role))
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
+}
+
+// Blokiranje korisnika
 func (s *UserService) BlockUser(userID string) error {
 	user, err := s.UserRepo.FindByID(userID)
 	if err != nil {
 		return err
 	}
-
 	user.Blocked = true
 	return s.UserRepo.Update(user)
 }
-

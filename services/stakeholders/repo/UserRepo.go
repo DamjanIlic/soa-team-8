@@ -31,3 +31,14 @@ func (r *UserRepo) FindByUsername(username string) (*model.User, error) {
 	result := r.DatabaseConnection.Where("username = ?", username).First(&user)
 	return &user, result.Error
 }
+
+func (r *UserRepo) FindByID(id string) (*model.User, error) {
+	var user model.User
+	result := r.DatabaseConnection.Where("id = ?", id).First(&user)
+	return &user, result.Error
+}
+
+func (r *UserRepo) Update(user *model.User) error {
+	return r.DatabaseConnection.Save(user).Error
+}
+
