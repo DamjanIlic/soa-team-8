@@ -75,14 +75,14 @@ func startServer(tourHandler *handler.TourHandler, keyPointHandler *handler.KeyP
 	api.HandleFunc("/tours", tourHandler.CreateTour).Methods("POST")
 	api.HandleFunc("/tours/{id}", tourHandler.GetTour).Methods("GET")
 	api.HandleFunc("/tours", tourHandler.GetAllTours).Methods("GET")
-	api.HandleFunc("/authors/{authorId}/tours", tourHandler.GetToursByAuthor).Methods("GET")
+	api.HandleFunc("/tours/authors/{authorId}", tourHandler.GetToursByAuthor).Methods("GET")
 
 	// KeyPoint endpoints
 	api.HandleFunc("/tours/{tourId}/keypoints", keyPointHandler.CreateKeyPoint).Methods("POST")
 	api.HandleFunc("/tours/{tourId}/keypoints", keyPointHandler.GetKeyPointsByTour).Methods("GET")
-	api.HandleFunc("/keypoints/{id}", keyPointHandler.GetKeyPoint).Methods("GET")
-	api.HandleFunc("/keypoints/{id}", keyPointHandler.UpdateKeyPoint).Methods("PUT")
-	api.HandleFunc("/keypoints/{id}", keyPointHandler.DeleteKeyPoint).Methods("DELETE")
+	api.HandleFunc("/tours/keypoints/{id}", keyPointHandler.GetKeyPoint).Methods("GET")
+	api.HandleFunc("/tours/keypoints/{id}", keyPointHandler.UpdateKeyPoint).Methods("PUT")
+	api.HandleFunc("/tours/keypoints/{id}", keyPointHandler.DeleteKeyPoint).Methods("DELETE")
 
 	// Staticki fajlovi
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static/")))

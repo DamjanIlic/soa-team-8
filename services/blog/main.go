@@ -31,6 +31,7 @@ func initDB() *gorm.DB {
 	var db *gorm.DB
 	var err error
 
+	// Retry 10 puta zbog inicijalnog podizanja containera
 	for i := 0; i < 10; i++ {
 		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 		if err == nil {
@@ -51,23 +52,6 @@ func initDB() *gorm.DB {
 	return db
 }
 
-// func main() {
-// 	database := initDB()
-// 	db := database
-// 	// blogRepo := &repo.BlogRepository{DatabaseConnection: database}
-// 	// // Auto-migrate tabele
-// 	// err = db.AutoMigrate(&model.Blog{}, &model.Comment{})
-// 	// if err != nil {
-// 	// 	log.Fatal("Failed to auto-migrate tables: ", err)
-// 	// }
-
-// 	if err := db.AutoMigrate(&model.Blog{}); err != nil {
-// 		log.Fatal("Failed to auto-migrate Blog table: ", err)
-// 	}
-
-// 	return db
-// }
-
 func getEnv(key, fallback string) string {
 	if value, ok := os.LookupEnv(key); ok {
 		return value
@@ -76,9 +60,10 @@ func getEnv(key, fallback string) string {
 }
 
 func main() {
-	database := initDB()
-	db := database
-	blogRepo := &repo.BlogRepository{DatabaseConnection: database}
+	db := initDB()
+
+	// Repo, service i handler slojevi
+	blogRepo := &repo.BlogRepository{DatabaseConnection: db}
 	blogService := &service.BlogService{BlogRepo: blogRepo}
 	blogHandler := &handler.BlogHandler{BlogService: blogService}
 
@@ -86,20 +71,26 @@ func main() {
 	commentService := &service.CommentService{CommentRepo: commentRepo}
 	commentHandler := &handler.CommentHandler{CommentService: commentService}
 
-	r := mux.NewRouter()
-	r.HandleFunc("/blogs", blogHandler.Create).Methods("POST")
-	r.HandleFunc("/blogs", blogHandler.GetAll).Methods("GET")
-	r.HandleFunc("/blogs/{id}", blogHandler.Get).Methods("GET")
-	r.HandleFunc("/blogs/{id}/like", blogHandler.Like).Methods("POST")
-	r.HandleFunc("/blogs/{id}/unlike", blogHandler.Unlike).Methods("POST")
+	// Router
+	router := mux.NewRouter().StrictSlash(true)
 
-	//port := getEnv("PORT", "8080")
-	//comment
-	r.HandleFunc("/blogs/{id}/comments", commentHandler.Create).Methods("POST")
-	r.HandleFunc("/blogs/{id}/comments", commentHandler.GetByBlogID).Methods("GET")
+	// API prefiks
+	api := router.PathPrefix("/api").Subrouter()
 
+	// Blog rute
+	api.HandleFunc("/blogs", blogHandler.Create).Methods("POST")
+	api.HandleFunc("/blogs", blogHandler.GetAll).Methods("GET")
+	api.HandleFunc("/blogs/{id}", blogHandler.Get).Methods("GET")
+	api.HandleFunc("/blogs/{id}/like", blogHandler.Like).Methods("POST")
+	api.HandleFunc("/blogs/{id}/unlike", blogHandler.Unlike).Methods("POST")
+
+	// Comment rute
+	api.HandleFunc("/blogs/{id}/comments", commentHandler.Create).Methods("POST")
+	api.HandleFunc("/blogs/{id}/comments", commentHandler.GetByBlogID).Methods("GET")
+
+	// Port
 	port := getEnv("PORT", "8080")
 
 	log.Printf("Blog service running on :%s\n", port)
-	log.Fatal(http.ListenAndServe(":"+port, r))
+	log.Fatal(http.ListenAndServe(":"+port, router))
 }
