@@ -21,12 +21,16 @@ func main() {
 	userService := &service.UserService{UserRepo: userRepo}
 	userHandler := &handler.UserHandler{UserService: userService}
 
-	router := mux.NewRouter()
-	router.HandleFunc("/register", userHandler.Register).Methods("POST")
-	router.HandleFunc("/login", userHandler.Login).Methods("POST")
-	router.HandleFunc("/block/{id}", userHandler.BlockUser).Methods("POST")
+	// Router sa /api prefiksom
+	router := mux.NewRouter().StrictSlash(true)
+	api := router.PathPrefix("/api").Subrouter()
 
-	port := getEnv("PORT", "8081")
+	// Rute za auth-service sa prefiksom /api
+	api.HandleFunc("/auth/register", userHandler.Register).Methods("POST")
+	api.HandleFunc("/auth/login", userHandler.Login).Methods("POST")
+	api.HandleFunc("/auth/block/{id}", userHandler.BlockUser).Methods("POST")
+
+	port := getEnv("PORT", "8080")
 	log.Printf("Auth service running on :%s\n", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
 }

@@ -71,23 +71,19 @@ func startServer(handler *handler.StakeholderHandler, userHandler *handler.UserH
 	api.HandleFunc("/stakeholders", handler.Create).Methods("POST")
 
 	// admin endpoint
-	api.HandleFunc("/admin/users", userHandler.GetAllUsers).Methods("GET")
+	api.HandleFunc("/stakeholders/admin/users", userHandler.GetAllUsers).Methods("GET")
 
 	// endpoint za registraciju neregistrovanih korisnika
-	api.HandleFunc("/register", userHandler.RegisterUser).Methods("POST")
+	api.HandleFunc("/stakeholders/register", userHandler.RegisterUser).Methods("POST")
 
 	//stakeholder db
-	api.HandleFunc("/profile/{userId}", handler.GetProfile).Methods("GET")
-	api.HandleFunc("/profile/{userId}", handler.UpdateProfile).Methods("PUT")
+	api.HandleFunc("/stakeholders/profile/{userId}", handler.GetProfile).Methods("GET")
+	api.HandleFunc("/stakeholders/profile/{userId}", handler.UpdateProfile).Methods("PUT")
 
-	
-	api.HandleFunc("/admin/users/{id}/block", userHandler.BlockUser).Methods("PUT")
+	api.HandleFunc("/stakeholders/admin/users/{id}/block", userHandler.BlockUser).Methods("PUT")
 
-
-	
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static")))
 
-	
 	port := getEnv("PORT", "8080")
 	log.Printf("Server starting on :%s\n", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
