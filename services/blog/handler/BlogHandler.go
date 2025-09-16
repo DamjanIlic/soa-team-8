@@ -1,10 +1,10 @@
 package handler
 
 import (
+	"blog/middleware" // ili gde god je tvoj middleware
 	"blog/model"
 	"blog/service"
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -56,11 +56,13 @@ func (h *BlogHandler) Get(w http.ResponseWriter, r *http.Request) {
 
 func (h *BlogHandler) Like(w http.ResponseWriter, r *http.Request) {
 	blogID := mux.Vars(r)["id"]
-	userID := r.Header.Get("X-User-ID")
-	if userID == "" {
-		http.Error(w, "missing userID", http.StatusBadRequest)
+
+	userIDCtx := r.Context().Value(middleware.ContextUserID)
+	if userIDCtx == nil {
+		http.Error(w, "missing userID in context", http.StatusUnauthorized)
 		return
 	}
+	userID := userIDCtx.(string)
 
 	count, err := h.BlogService.Like(blogID, userID)
 	if err != nil {
@@ -68,17 +70,19 @@ func (h *BlogHandler) Like(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf("Blog liked, total likes: %d", count)))
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]int{"likes": count})
 }
 
 func (h *BlogHandler) Unlike(w http.ResponseWriter, r *http.Request) {
 	blogID := mux.Vars(r)["id"]
-	userID := r.Header.Get("X-User-ID")
-	if userID == "" {
-		http.Error(w, "missing userID", http.StatusBadRequest)
+
+	userIDCtx := r.Context().Value(middleware.ContextUserID)
+	if userIDCtx == nil {
+		http.Error(w, "missing userID in context", http.StatusUnauthorized)
 		return
 	}
+	userID := userIDCtx.(string)
 
 	count, err := h.BlogService.Unlike(blogID, userID)
 	if err != nil {
@@ -86,6 +90,6 @@ func (h *BlogHandler) Unlike(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf("Blog unliked, total likes: %d", count)))
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]int{"likes": count})
 }
