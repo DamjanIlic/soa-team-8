@@ -52,6 +52,15 @@ func (s *UserService) Login(email, password string) (string, error) {
 	return token, nil
 }
 
+// Dobavljanje korisnika po ID-u
+func (s *UserService) GetUser(userID string) (*model.User, error) {
+	user, err := s.UserRepo.FindByID(userID)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
 // Blokiranje korisnika
 func (s *UserService) BlockUser(userID string) error {
 	user, err := s.UserRepo.FindByID(userID)

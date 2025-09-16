@@ -1,43 +1,51 @@
 package main
 
 import (
-	"auth/handler"
 	"auth/model"
-	"auth/proto"
 	"auth/repo"
 	"auth/service"
 	"context"
+	"encoding/json"
 	"log"
 	"net"
 	"net/http"
 	"os"
 
-	"github.com/gorilla/mux"
+	gw "auth/proto"
+
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/reflection"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-// gRPC server samo za Login i GetUser
+// UserServer implementira AuthServiceServer
 type UserServer struct {
-	proto.UnimplementedAuthServiceServer
+	gw.UnimplementedAuthServiceServer
 	UserService *service.UserService
 }
 
-func (s *UserServer) Login(ctx context.Context, req *proto.LoginRequest) (*proto.LoginResponse, error) {
+// Login RPC metoda
+func (s *UserServer) Login(ctx context.Context, req *gw.LoginRequest) (*gw.AuthResponse, error) {
 	token, err := s.UserService.Login(req.Email, req.Password)
 	if err != nil {
-		return nil, err
+		return &gw.AuthResponse{Message: err.Error()}, nil
 	}
-	return &proto.LoginResponse{Token: token}, nil
+	return &gw.AuthResponse{
+		Token:   token,
+		Message: "login successful",
+	}, nil
 }
 
-func (s *UserServer) GetUser(ctx context.Context, req *proto.GetUserRequest) (*proto.GetUserResponse, error) {
-	user, err := s.UserService.UserRepo.FindByID(req.Id)
+// GetUser RPC metoda
+func (s *UserServer) GetUser(ctx context.Context, req *gw.GetUserRequest) (*gw.GetUserResponse, error) {
+	user, err := s.UserService.GetUser(req.Id)
 	if err != nil {
 		return nil, err
 	}
-	return &proto.GetUserResponse{
+	return &gw.GetUserResponse{
 		Id:       user.ID.String(),
 		Username: user.Username,
 		Email:    user.Email,
@@ -46,43 +54,90 @@ func (s *UserServer) GetUser(ctx context.Context, req *proto.GetUserRequest) (*p
 	}, nil
 }
 
+// HTTP handler za registraciju (bez RPC)
+func RegisterHandler(svc *service.UserService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req struct {
+			Username string `json:"username"`
+			Email    string `json:"email"`
+			Password string `json:"password"`
+			Role     string `json:"role"`
+		}
+
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "invalid request", http.StatusBadRequest)
+			return
+		}
+
+		user := &model.User{
+			Username: req.Username,
+			Email:    req.Email,
+			Password: req.Password,
+			Role:     model.Role(req.Role),
+		}
+
+		if err := svc.RegisterUser(user); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{
+			"message": "registration successful",
+		})
+	}
+}
+
 func main() {
 	db := initDB()
-
 	userRepo := &repo.UserRepo{DB: db}
 	userService := &service.UserService{UserRepo: userRepo}
-	userHandler := &handler.UserHandler{UserService: userService}
 
-	// --- REST rute (ostaju iste) ---
-	router := mux.NewRouter().StrictSlash(true)
-	api := router.PathPrefix("/api").Subrouter()
-	api.HandleFunc("/auth/register", userHandler.Register).Methods("POST")
-	api.HandleFunc("/auth/block/{id}", userHandler.BlockUser).Methods("POST")
-
-	// HTTP server za REST
-	httpPort := getEnv("PORT", "8086")
-	go func() {
-		log.Printf("HTTP REST server running on :%s\n", httpPort)
-		log.Fatal(http.ListenAndServe(":"+httpPort, router))
-	}()
-
-	// --- gRPC server za Login i GetUser ---
 	grpcPort := getEnv("GRPC_PORT", "50051")
-	lis, err := net.Listen("tcp", "0.0.0.0:"+grpcPort)
+	httpPort := getEnv("PORT", "8080")
+
+	// gRPC server
+	grpcServer := grpc.NewServer()
+	gw.RegisterAuthServiceServer(grpcServer, &UserServer{UserService: userService})
+
+	// Omogući reflection za grpcurl
+	reflection.Register(grpcServer)
+
+	listener, err := net.Listen("tcp", "0.0.0.0:"+grpcPort)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	grpcServer := grpc.NewServer()
-	proto.RegisterAuthServiceServer(grpcServer, &UserServer{UserService: userService})
+	go func() {
+		log.Printf("gRPC Auth service running on :%s", grpcPort)
+		if err := grpcServer.Serve(listener); err != nil {
+			log.Fatalf("failed to serve gRPC: %v", err)
+		}
+	}()
 
-	log.Printf("gRPC server running on :%s\n", grpcPort)
-	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("failed to serve grpc: %v", err)
+	// gRPC-Gateway
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	mux := runtime.NewServeMux()
+	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+
+	if err := gw.RegisterAuthServiceHandlerFromEndpoint(ctx, mux, "auth-service:"+grpcPort, opts); err != nil {
+		log.Fatalf("failed to register gateway: %v", err)
+	}
+
+	// HTTP mux kombinuje Register handler i ostale RPC endpoint-e
+	httpMux := http.NewServeMux()
+	httpMux.Handle("/api/auth/register", RegisterHandler(userService))
+	httpMux.Handle("/", mux)
+
+	log.Printf("HTTP Auth service running on :%s", httpPort)
+	if err := http.ListenAndServe(":"+httpPort, httpMux); err != nil {
+		log.Fatalf("failed to serve HTTP: %v", err)
 	}
 }
 
-// --- DB konekcija ---
 func initDB() *gorm.DB {
 	host := getEnv("DB_HOST", "stakeholders-db")
 	user := getEnv("DB_USER", "postgres")
@@ -90,13 +145,18 @@ func initDB() *gorm.DB {
 	dbname := getEnv("DB_NAME", "stakeholdersdb")
 	port := getEnv("DB_PORT", "5432")
 
-	dsn := "host=" + host + " user=" + user + " password=" + password + " dbname=" + dbname + " port=" + port + " sslmode=disable"
+	dsn := "host=" + host + " user=" + user + " password=" + password +
+		" dbname=" + dbname + " port=" + port + " sslmode=disable"
+
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("failed to connect to database: %v", err)
 	}
 
-	db.AutoMigrate(&model.User{})
+	if err := db.AutoMigrate(&model.User{}); err != nil {
+		log.Fatalf("failed to migrate database: %v", err)
+	}
+
 	return db
 }
 

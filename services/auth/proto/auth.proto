@@ -2,11 +2,39 @@ syntax = "proto3";
 
 package auth;
 
-option go_package = "/proto;proto"; 
+option go_package = "auth/proto;proto";
 
+import "google/api/annotations.proto";
+
+// Definišemo servis
 service AuthService {
-  rpc Login (LoginRequest) returns (LoginResponse);
-  rpc GetUser (GetUserRequest) returns (GetUserResponse);
+  rpc Register (RegisterRequest) returns (AuthResponse) {
+    option (google.api.http) = {
+      post: "/api/auth/register"
+      body: "*"
+    };
+  }
+
+  rpc Login (LoginRequest) returns (AuthResponse) {
+    option (google.api.http) = {
+      post: "/api/auth/login"
+      body: "*"
+    };
+  }
+
+  rpc GetUser (GetUserRequest) returns (GetUserResponse) {
+    option (google.api.http) = {
+      get: "/api/auth/user/{id}"
+    };
+  }
+}
+
+// Request i Response poruke
+message RegisterRequest {
+  string username = 1;
+  string email = 2;
+  string password = 3;
+  string role = 4;
 }
 
 message LoginRequest {
@@ -14,8 +42,9 @@ message LoginRequest {
   string password = 2;
 }
 
-message LoginResponse {
+message AuthResponse {
   string token = 1;
+  string message = 2;
 }
 
 message GetUserRequest {
