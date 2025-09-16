@@ -2,54 +2,33 @@ package main
 
 import (
 	"blog/handler"
-	"blog/model"
 	"blog/repo"
 	"blog/service"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
+
+	"context"
 	"time"
 
 	"github.com/gorilla/mux"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func initDB() *gorm.DB {
-	dbHost := getEnv("DB_HOST", "localhost")
-	dbUser := getEnv("DB_USER", "postgres")
-	dbPassword := getEnv("DB_PASSWORD", "postgres")
+func initMongo() *mongo.Database {
+	mongoURI := getEnv("MONGO_URI", "mongodb://localhost:27017")
 	dbName := getEnv("DB_NAME", "blog")
-	dbPort := getEnv("DB_PORT", "5432")
 
-	dsn := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Europe/Belgrade",
-		dbHost, dbUser, dbPassword, dbName, dbPort,
-	)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
-	var db *gorm.DB
-	var err error
-
-	// Retry 10 puta zbog inicijalnog podizanja containera
-	for i := 0; i < 10; i++ {
-		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
-		if err == nil {
-			break
-		}
-		log.Printf("DB connection failed, retrying in 3s... (%d/10)\n", i+1)
-		time.Sleep(3 * time.Second)
-	}
-
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI))
 	if err != nil {
-		log.Fatal("Failed to connect to DB: ", err)
+		log.Fatal("Failed to connect to MongoDB: ", err)
 	}
 
-	if err := db.AutoMigrate(&model.Blog{}); err != nil {
-		log.Fatal("Failed to auto-migrate Blog table: ", err)
-	}
-
-	return db
+	return client.Database(dbName)
 }
 
 func getEnv(key, fallback string) string {
@@ -60,37 +39,38 @@ func getEnv(key, fallback string) string {
 }
 
 func main() {
-	db := initDB()
+	db := initMongo()
 
-	// Repo, service i handler slojevi
-	blogRepo := &repo.BlogRepository{DatabaseConnection: db}
-	blogService := &service.BlogService{BlogRepo: blogRepo}
-	blogHandler := &handler.BlogHandler{BlogService: blogService}
+	// Repositories
+	blogRepo := &repo.BlogRepository{Collection: db.Collection("blogs")}
+	commentRepo := &repo.CommentRepository{Collection: db.Collection("comments")}
+	likeRepo := &repo.LikeRepository{Collection: db.Collection("likes")}
 
-	commentRepo := &repo.CommentRepository{DB: db}
+	// Services
+	blogService := &service.BlogService{BlogRepo: blogRepo, LikeRepo: likeRepo}
 	commentService := &service.CommentService{CommentRepo: commentRepo}
+
+	// Handlers
+	blogHandler := &handler.BlogHandler{BlogService: blogService}
 	commentHandler := &handler.CommentHandler{CommentService: commentService}
 
 	// Router
 	router := mux.NewRouter().StrictSlash(true)
-
-	// API prefiks
 	api := router.PathPrefix("/api").Subrouter()
 
-	// Blog rute
+	// Blog routes
 	api.HandleFunc("/blogs", blogHandler.Create).Methods("POST")
 	api.HandleFunc("/blogs", blogHandler.GetAll).Methods("GET")
 	api.HandleFunc("/blogs/{id}", blogHandler.Get).Methods("GET")
 	api.HandleFunc("/blogs/{id}/like", blogHandler.Like).Methods("POST")
 	api.HandleFunc("/blogs/{id}/unlike", blogHandler.Unlike).Methods("POST")
 
-	// Comment rute
+	// Comment routes
 	api.HandleFunc("/blogs/{id}/comments", commentHandler.Create).Methods("POST")
 	api.HandleFunc("/blogs/{id}/comments", commentHandler.GetByBlogID).Methods("GET")
 
-	// Port
+	// Start server
 	port := getEnv("PORT", "8080")
-
 	log.Printf("Blog service running on :%s\n", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
 }

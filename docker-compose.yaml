@@ -85,21 +85,14 @@ services:
          condition: service_healthy
 
   blog-db:
-    image: postgres:15
+    image: mongo:7
     container_name: blog-db
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: blog
+      MONGO_INITDB_DATABASE: blog
     ports:
-      - "5435:5432"
+      - "27017:27017"
     volumes:
-      - blog-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - blog-data:/data/db
 
   blog-service:
     build:
@@ -107,17 +100,13 @@ services:
       dockerfile: Dockerfile
     container_name: blog-service
     environment:
-      DB_HOST: blog-db
-      DB_USER: postgres
-      DB_PASSWORD: postgres
+      MONGO_URI: mongodb://blog-db:27017
       DB_NAME: blog
-      DB_PORT: 5432
       PORT: 8080
     ports:
       - "8080:8080"
     depends_on:
-      blog-db:
-        condition: service_healthy
+      - blog-db
 
   follow-service:
     build:

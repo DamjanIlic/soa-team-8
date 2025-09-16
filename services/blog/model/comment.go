@@ -4,25 +4,25 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 )
 
-// type CommentWithUser struct {
-//     Comment
-//     User User `json:"user"`
-// }
-
 type Comment struct {
-	ID        uuid.UUID `json:"id"`
-	BlogID    uuid.UUID `json:"blog_id"`
-	UserID    uuid.UUID `json:"user_id"`
-	Text      string    `json:"text" gorm:"not null"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID        string    `json:"id" bson:"_id,omitempty"`
+	BlogID    string    `json:"blog_id" bson:"blog_id"`
+	UserID    string    `json:"user_id" bson:"user_id"`
+	Text      string    `json:"text" bson:"text"`
+	CreatedAt time.Time `json:"created_at" bson:"created_at"`
+	UpdatedAt time.Time `json:"updated_at" bson:"updated_at"`
 }
 
-// BeforeCreate hook za automatsko generisanje UUID-a
-func (c *Comment) BeforeCreate(tx *gorm.DB) (err error) {
-	c.ID = uuid.New()
-	return
+// Konstruktor za novi komentar
+func NewComment(blogID, userID, text string) *Comment {
+	return &Comment{
+		ID:        uuid.New().String(),
+		BlogID:    blogID,
+		UserID:    userID,
+		Text:      text,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
 }

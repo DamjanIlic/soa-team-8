@@ -4,37 +4,42 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 )
 
 type Blog struct {
-	ID        uuid.UUID `json:"id"`
-	Title     string    `json:"title" gorm:"not null"`
-	Content   string    `json:"content"` // markdown na frontu
-	ImageURL  string    `json:"image_url,omitempty"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Likes     int       `json:"likes"`
+	ID        string    `json:"id" bson:"_id,omitempty"`
+	Title     string    `json:"title" bson:"title"`
+	Content   string    `json:"content" bson:"content"`
+	ImageURL  string    `json:"image_url,omitempty" bson:"image_url,omitempty"`
+	CreatedAt time.Time `json:"created_at" bson:"created_at"`
+	UpdatedAt time.Time `json:"updated_at" bson:"updated_at"`
+	Likes     int       `json:"likes" bson:"likes"`
 }
 
-func (blog *Blog) BeforeCreate(tx *gorm.DB) (err error) {
-	blog.ID = uuid.New()
-	blog.CreatedAt = time.Now()
-	blog.UpdatedAt = time.Now()
-	blog.Likes = 0
-	return
+func NewBlog(title, content, imageURL string) *Blog {
+	return &Blog{
+		ID:        uuid.New().String(),
+		Title:     title,
+		Content:   content,
+		ImageURL:  imageURL,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		Likes:     0,
+	}
 }
 
 type Like struct {
-	ID        uuid.UUID `json:"id"`
-	UserID    uuid.UUID `json:"user_id" gorm:"not null"`
-	BlogID    uuid.UUID `json:"blog_id" gorm:"not null"`
-	CreatedAt time.Time `json:"created_at"`
+	ID        string    `json:"id" bson:"_id,omitempty"`
+	UserID    string    `json:"user_id" bson:"user_id"`
+	BlogID    string    `json:"blog_id" bson:"blog_id"`
+	CreatedAt time.Time `json:"created_at" bson:"created_at"`
 }
 
-func (l *Like) BeforeCreate(tx *gorm.DB) (err error) {
-	l.ID = uuid.New()
-	l.CreatedAt = time.Now()
-	return
+func NewLike(userID, blogID string) *Like {
+	return &Like{
+		ID:        uuid.New().String(),
+		UserID:    userID,
+		BlogID:    blogID,
+		CreatedAt: time.Now(),
+	}
 }
-
