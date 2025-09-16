@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"auth-service/model"
-	"auth-service/service"
+	"auth/model"
+	"auth/service"
 	"encoding/json"
 	"net/http"
 
@@ -65,7 +65,7 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) BlockUser(w http.ResponseWriter, r *http.Request) {
-	
+
 	vars := mux.Vars(r)
 	userID := vars["id"]
 

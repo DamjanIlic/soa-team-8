@@ -14,8 +14,6 @@ COPY . .
 # Build aplikacije
 RUN go build -o auth-service main.go
 
-# Expose port
-EXPOSE 8081
-
-# Pokreni aplikaciju
+EXPOSE 8080 50051
 CMD ["./auth-service"]
+
