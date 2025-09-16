@@ -1,11 +1,11 @@
 package service
 
 import (
-	"auth-service/model"
-	"auth-service/repo"
+	"auth/model"
+	"auth/repo"
 	"errors"
 
-	"auth-service/util"
+	"auth/util"
 
 	"golang.org/x/crypto/bcrypt"
 )
