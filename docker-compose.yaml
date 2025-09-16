@@ -151,7 +151,17 @@ services:
     depends_on:
       stakeholders-db:
         condition: service_healthy
-
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: tourism-frontend
+    ports:
+      - "4200:4200"
+    # volumes:
+    #   - ./frontend:/app       # mapira lokalni folder za hot reload
+    depends_on:
+      - api-gateway           # ili direktno na servis koji treba da zoveš
   
 
 volumes:
