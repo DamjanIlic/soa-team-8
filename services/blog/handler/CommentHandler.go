@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
@@ -27,9 +26,11 @@ func (h *CommentHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Kreiramo novi comment sa string ID-jem
 	comment := &model.Comment{
-		BlogID: parseUUID(blogID),
-		UserID: parseUUID(input.UserID),
+		ID:     model.NewComment(input.UserID, blogID, input.Text).ID,
+		BlogID: blogID,
+		UserID: input.UserID,
 		Text:   input.Text,
 	}
 
@@ -52,10 +53,4 @@ func (h *CommentHandler) GetByBlogID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(comments)
-}
-
-// Helper funkcija za parsiranje UUID iz stringa
-func parseUUID(s string) uuid.UUID {
-	id, _ := uuid.Parse(s)
-	return id
 }
