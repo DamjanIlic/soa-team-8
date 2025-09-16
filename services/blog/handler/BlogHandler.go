@@ -17,14 +17,17 @@ type BlogHandler struct {
 func (h *BlogHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var blog model.Blog
 	if err := json.NewDecoder(r.Body).Decode(&blog); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(err.Error()))
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
+	// Ako ID nije setovan, kreiraj novi
+	if blog.ID == "" {
+		blog.ID = model.NewBlog(blog.Title, blog.Content, blog.ImageURL).ID
+	}
+
 	if err := h.BlogService.Create(&blog); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -35,8 +38,7 @@ func (h *BlogHandler) Create(w http.ResponseWriter, r *http.Request) {
 func (h *BlogHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	blogs, err := h.BlogService.GetAll()
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	json.NewEncoder(w).Encode(blogs)
@@ -46,8 +48,7 @@ func (h *BlogHandler) Get(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 	blog, err := h.BlogService.Get(id)
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte(err.Error()))
+		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 	json.NewEncoder(w).Encode(blog)
@@ -55,19 +56,15 @@ func (h *BlogHandler) Get(w http.ResponseWriter, r *http.Request) {
 
 func (h *BlogHandler) Like(w http.ResponseWriter, r *http.Request) {
 	blogID := mux.Vars(r)["id"]
-
-	// primer dobijanja userID; zameni po potrebi (npr. iz JWT tokena)
 	userID := r.Header.Get("X-User-ID")
 	if userID == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("missing userID"))
+		http.Error(w, "missing userID", http.StatusBadRequest)
 		return
 	}
 
 	count, err := h.BlogService.Like(blogID, userID)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -77,18 +74,15 @@ func (h *BlogHandler) Like(w http.ResponseWriter, r *http.Request) {
 
 func (h *BlogHandler) Unlike(w http.ResponseWriter, r *http.Request) {
 	blogID := mux.Vars(r)["id"]
-
 	userID := r.Header.Get("X-User-ID")
 	if userID == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("missing userID"))
+		http.Error(w, "missing userID", http.StatusBadRequest)
 		return
 	}
 
 	count, err := h.BlogService.Unlike(blogID, userID)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 

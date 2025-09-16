@@ -2,22 +2,33 @@ package repo
 
 import (
 	"blog/model"
+	"context"
 
-	"gorm.io/gorm"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type CommentRepository struct {
-	DB *gorm.DB
+	Collection *mongo.Collection
 }
 
 // Kreiranje novog komentara
 func (r *CommentRepository) Create(comment *model.Comment) error {
-	return r.DB.Create(comment).Error
+	_, err := r.Collection.InsertOne(context.TODO(), comment)
+	return err
 }
 
-// Dohvatanje svih komentara za jedan blog post
+// Dohvatanje komentara po blogID-u (string)
 func (r *CommentRepository) GetByBlogID(blogID string) ([]model.Comment, error) {
+	cursor, err := r.Collection.Find(context.TODO(), bson.M{"blog_id": blogID})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.TODO())
+
 	var comments []model.Comment
-	err := r.DB.Where("blog_id = ?", blogID).Order("created_at asc").Find(&comments).Error
-	return comments, err
+	if err = cursor.All(context.TODO(), &comments); err != nil {
+		return nil, err
+	}
+	return comments, nil
 }
