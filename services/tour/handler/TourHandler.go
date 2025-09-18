@@ -81,3 +81,42 @@ func (h *TourHandler) GetAllTours(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(tours)
 }
+
+func (h *TourHandler) PublishTour(w http.ResponseWriter, r *http.Request) {
+	tourID := mux.Vars(r)["id"]
+	authorID := r.Context().Value(middleware.ContextUserID).(string)
+
+	tour, err := h.TourService.PublishTour(tourID, authorID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusForbidden)
+		return
+	}
+
+	json.NewEncoder(w).Encode(tour)
+}
+
+func (h *TourHandler) ArchiveTour(w http.ResponseWriter, r *http.Request) {
+	tourID := mux.Vars(r)["id"]
+	authorID := r.Context().Value(middleware.ContextUserID).(string)
+
+	tour, err := h.TourService.ArchiveTour(tourID, authorID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusForbidden)
+		return
+	}
+
+	json.NewEncoder(w).Encode(tour)
+}
+
+func (h *TourHandler) ReactivateTour(w http.ResponseWriter, r *http.Request) {
+	tourID := mux.Vars(r)["id"]
+	authorID := r.Context().Value(middleware.ContextUserID).(string)
+
+	tour, err := h.TourService.ReactivateTour(tourID, authorID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusForbidden)
+		return
+	}
+
+	json.NewEncoder(w).Encode(tour)
+}

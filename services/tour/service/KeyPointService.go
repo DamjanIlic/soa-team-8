@@ -1,8 +1,10 @@
 package service
 
 import (
+	"math"
 	"tour/model"
 	"tour/repo"
+
 	"github.com/google/uuid"
 )
 
@@ -18,7 +20,7 @@ func (s *KeyPointService) CreateKeyPoint(tourID string, req *model.KeyPointReque
 	}
 
 	// Proveri da li tura postoji
-	_, err = s.TourRepo.GetByID(tourID)
+	tour, err := s.TourRepo.GetByID(tourID)
 	if err != nil {
 		return nil, err
 	}
@@ -35,6 +37,15 @@ func (s *KeyPointService) CreateKeyPoint(tourID string, req *model.KeyPointReque
 
 	if err := s.KeyPointRepo.Create(keyPoint); err != nil {
 		return nil, err
+	}
+
+	// Update distance ture ako postoji prethodna ključna tačka
+	keyPoints, err := s.KeyPointRepo.GetByTourID(tid)
+	if err == nil && len(keyPoints) > 1 {
+		last := keyPoints[len(keyPoints)-2] // pređašnja tačka
+		addedDistance := haversine(last.Latitude, last.Longitude, keyPoint.Latitude, keyPoint.Longitude)
+		tour.DistanceKm += addedDistance
+		_ = s.TourRepo.Update(tour)
 	}
 
 	response := &model.KeyPointResponse{
@@ -133,4 +144,18 @@ func (s *KeyPointService) UpdateKeyPoint(id string, updates map[string]interface
 
 func (s *KeyPointService) DeleteKeyPoint(id string) error {
 	return s.KeyPointRepo.Delete(id)
+}
+
+// Haversine formula za udaljenost između dve geografske tačke
+func haversine(lat1, lon1, lat2, lon2 float64) float64 {
+	const R = 6371 // Earth radius in km
+	dLat := (lat2 - lat1) * math.Pi / 180.0
+	dLon := (lon2 - lon1) * math.Pi / 180.0
+	lat1 = lat1 * math.Pi / 180.0
+	lat2 = lat2 * math.Pi / 180.0
+
+	a := math.Sin(dLat/2)*math.Sin(dLat/2) +
+		math.Sin(dLon/2)*math.Sin(dLon/2)*math.Cos(lat1)*math.Cos(lat2)
+	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
+	return R * c
 }
