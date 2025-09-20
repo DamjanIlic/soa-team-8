@@ -64,6 +64,7 @@ func main() {
 	tokenService := &service.TokenService{
 		CartRepo:  cartRepo,
 		TokenRepo: tokenRepo,
+		ItemRepo:  itemRepo,
 	}
 
 	// handlers
@@ -86,12 +87,13 @@ func startServer(cartHandler *handler.CartHandler, tokenHandler *handler.TokenHa
 
 	// Cart endpoints
 	api.HandleFunc("/cart", cartHandler.CreateCart).Methods("POST")
-	api.HandleFunc("/cart/{cartId}/items", cartHandler.AddItem).Methods("POST")
-	api.HandleFunc("/cart/{cartId}/items/{itemId}", cartHandler.RemoveItem).Methods("DELETE")
-	api.HandleFunc("/cart/{cartId}/total", cartHandler.GetTotal).Methods("GET")
+	api.HandleFunc("/cart", cartHandler.GetCart).Methods("GET")
+	api.HandleFunc("/cart/items", cartHandler.AddItem).Methods("POST")
+	api.HandleFunc("/cart/items/{itemId}", cartHandler.RemoveItem).Methods("DELETE")
+	api.HandleFunc("/cart/total", cartHandler.GetTotal).Methods("GET")
 
 	// Token endpoints (checkout)
-	api.HandleFunc("/checkout", tokenHandler.Checkout).Methods("POST")
+	api.HandleFunc("/cart/checkout", tokenHandler.Checkout).Methods("POST")
 
 	port := getEnv("PORT", "8080")
 	log.Printf("Purchase service starting on :%s 🚀\n", port)

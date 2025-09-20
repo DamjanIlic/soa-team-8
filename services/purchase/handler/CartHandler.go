@@ -44,10 +44,21 @@ func (h *CartHandler) CreateCart(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *CartHandler) AddItem(w http.ResponseWriter, r *http.Request) {
-	cartIDStr := mux.Vars(r)["cartId"]
-	cartID, err := uuid.Parse(cartIDStr)
+	role, ok := r.Context().Value(middleware.ContextRole).(string)
+	if !ok || role != "tourist" {
+		http.Error(w, "Only tourists can add items to cart", http.StatusForbidden)
+		return
+	}
+
+	userID := r.Context().Value(middleware.ContextUserID)
+	if userID == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	touristID, err := uuid.Parse(userID.(string))
 	if err != nil {
-		http.Error(w, "Invalid cart ID", http.StatusBadRequest)
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
 		return
 	}
 
@@ -67,7 +78,8 @@ func (h *CartHandler) AddItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	item, err := h.CartService.AddItem(cartID, tourID, req.Name, req.Price)
+	// metoda koja automatski kreira cart ako ne postoji
+	item, err := h.CartService.AddItemToUserCart(touristID, tourID, req.Name, req.Price)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -78,19 +90,32 @@ func (h *CartHandler) AddItem(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *CartHandler) RemoveItem(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	cartID, err := uuid.Parse(vars["cartId"])
-	if err != nil {
-		http.Error(w, "Invalid cart ID", http.StatusBadRequest)
+	userID := r.Context().Value(middleware.ContextUserID)
+	if userID == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
+
+	touristID, err := uuid.Parse(userID.(string))
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	vars := mux.Vars(r)
 	itemID, err := uuid.Parse(vars["itemId"])
 	if err != nil {
 		http.Error(w, "Invalid item ID", http.StatusBadRequest)
 		return
 	}
 
-	if err := h.CartService.RemoveItem(cartID, itemID); err != nil {
+	cart, err := h.CartService.GetByTouristID(touristID)
+	if err != nil {
+		http.Error(w, "Cart not found", http.StatusNotFound)
+		return
+	}
+
+	if err := h.CartService.RemoveItem(cart.ID, itemID); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -100,14 +125,25 @@ func (h *CartHandler) RemoveItem(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *CartHandler) GetTotal(w http.ResponseWriter, r *http.Request) {
-	cartIDStr := mux.Vars(r)["cartId"]
-	cartID, err := uuid.Parse(cartIDStr)
-	if err != nil {
-		http.Error(w, "Invalid cart ID", http.StatusBadRequest)
+	userID := r.Context().Value(middleware.ContextUserID)
+	if userID == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	total, err := h.CartService.GetTotal(cartID)
+	touristID, err := uuid.Parse(userID.(string))
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	cart, err := h.CartService.GetByTouristID(touristID)
+	if err != nil {
+		http.Error(w, "Cart not found", http.StatusNotFound)
+		return
+	}
+
+	total, err := h.CartService.GetTotal(cart.ID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -116,4 +152,27 @@ func (h *CartHandler) GetTotal(w http.ResponseWriter, r *http.Request) {
 	resp := map[string]float64{"total": total}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp)
+}
+
+func (h *CartHandler) GetCart(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value(middleware.ContextUserID)
+	if userID == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	touristID, err := uuid.Parse(userID.(string))
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	cart, err := h.CartService.GetByTouristID(touristID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(cart)
 }

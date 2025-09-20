@@ -24,13 +24,18 @@ func (s *CartService) CreateCart(touristID uuid.UUID) (*model.ShoppingCart, erro
 	return cart, nil
 }
 
-// dodaje item u korpu
-func (s *CartService) AddItem(cartID uuid.UUID, tourID uuid.UUID, name string, price float64) (*model.OrderItem, error) {
-	cart, err := s.CartRepo.GetByID(cartID)
+// dodaje item u korpu (auto-kreira korpu ako ne postoji)
+func (s *CartService) AddItemToUserCart(touristID uuid.UUID, tourID uuid.UUID, name string, price float64) (*model.OrderItem, error) {
+	cart, err := s.CartRepo.GetByTouristID(touristID)
 	if err != nil {
-		return nil, err
+		// ako korpa ne postoji, kreiraj novu
+		cart, err = s.CreateCart(touristID)
+		if err != nil {
+			return nil, errors.New("failed to create cart: " + err.Error())
+		}
 	}
 
+	// sada dodaj item u korpu
 	item := &model.OrderItem{
 		CartID: cart.ID,
 		TourID: tourID,
@@ -44,6 +49,10 @@ func (s *CartService) AddItem(cartID uuid.UUID, tourID uuid.UUID, name string, p
 	// osvezi korpu
 	cart.Items = append(cart.Items, *item)
 	if err := s.CartRepo.Update(cart); err != nil {
+		return nil, err
+	}
+
+	if err := s.updateCartTotal(cart); err != nil {
 		return nil, err
 	}
 
@@ -72,7 +81,8 @@ func (s *CartService) RemoveItem(cartID, itemID uuid.UUID) error {
 	if err := s.ItemRepo.Delete(itemID); err != nil {
 		return err
 	}
-	return s.CartRepo.Update(cart)
+
+	return s.updateCartTotal(cart)
 }
 
 // vraca ukupnu cenu
@@ -87,4 +97,17 @@ func (s *CartService) GetTotal(cartID uuid.UUID) (float64, error) {
 		total += item.Price
 	}
 	return total, nil
+}
+
+func (s *CartService) GetByTouristID(touristID uuid.UUID) (*model.ShoppingCart, error) {
+	return s.CartRepo.GetByTouristID(touristID)
+}
+
+func (s *CartService) updateCartTotal(cart *model.ShoppingCart) error {
+	var total float64
+	for _, item := range cart.Items {
+		total += item.Price
+	}
+	cart.Total = total
+	return s.CartRepo.Update(cart)
 }

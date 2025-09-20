@@ -11,6 +11,7 @@ import (
 type TokenService struct {
 	TokenRepo *repo.TokenRepository
 	CartRepo  *repo.CartRepository
+	ItemRepo  *repo.ItemRepository
 }
 
 // checkout generise token za svaku stavku u korpi
@@ -34,8 +35,16 @@ func (s *TokenService) Checkout(touristID uuid.UUID) ([]model.TourPurchaseToken,
 		tokens = append(tokens, token)
 	}
 
-	// isprazni korpu
+	// obrise sve stavke iz baze podataka
+	for _, item := range cart.Items {
+		if err := s.ItemRepo.Delete(item.ID); err != nil {
+			return nil, err
+		}
+	}
+
+	// isprazni korpu i postavi total na 0
 	cart.Items = []model.OrderItem{}
+	cart.Total = 0
 	if err := s.CartRepo.Update(cart); err != nil {
 		return nil, err
 	}
