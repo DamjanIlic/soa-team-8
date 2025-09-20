@@ -27,17 +27,16 @@ func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 		Role:     model.Role(req.Role),
 	}
 
-	if err := h.UserService.RegisterUser(user); err != nil {
+	// Registracija korisnika i generisanje JWT
+	token, err := h.UserService.RegisterUser(user)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	resp := model.UserResponse{
-		ID:       user.ID.String(),
-		Username: user.Username,
-		Email:    user.Email,
-		Role:     string(user.Role),
-		Blocked:  user.Blocked,
+	resp := map[string]string{
+		"message": "registration successful",
+		"token":   token, // JWT vraćen odmah nakon registracije
 	}
 
 	w.Header().Set("Content-Type", "application/json")

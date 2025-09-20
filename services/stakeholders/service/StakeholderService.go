@@ -11,9 +11,30 @@ type StakeholderService struct {
 	StakeholderRepo *repo.StakeholderRepository
 }
 
-func (s *StakeholderService) Create(stakeholder *model.Stakeholder) error {
-	//
-	return s.StakeholderRepo.Create(stakeholder)
+func (s *StakeholderService) Create(userID string, input *model.StakeholderInput) (*model.Stakeholder, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	stakeholder := &model.Stakeholder{
+		UserID:       uid,
+		Name:         input.Name,
+		Surname:      input.Surname,
+		Biography:    input.Biography,
+		Motto:        input.Motto,
+		ProfileImage: input.ProfileImage,
+	}
+
+	if err := s.StakeholderRepo.Create(stakeholder); err != nil {
+		return nil, err
+	}
+
+	return stakeholder, nil
+}
+
+func (s *StakeholderService) GetAll() []model.Stakeholder {
+	return s.StakeholderRepo.FindAll()
 }
 
 func (s *StakeholderService) Get(id string) (*model.Stakeholder, error) {
