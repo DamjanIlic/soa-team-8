@@ -124,6 +124,41 @@ services:
     volumes:
       - ./services/follow/app:/app
 
+  purchase-db:
+    image: postgres:15
+    container_name: purchase-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: super
+      POSTGRES_DB: purchasedb
+    ports:
+      - "5435:5432"
+    volumes:
+      - purchase-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  purchase-service:
+    build:
+      context: ./services/purchase
+      dockerfile: Dockerfile
+    container_name: purchase-service
+    environment:
+      DB_HOST: purchase-db
+      DB_USER: postgres
+      DB_PASSWORD: super
+      DB_NAME: purchasedb
+      DB_PORT: 5432
+      PORT: 8080
+    ports:
+      - "8087:8080"
+    depends_on:
+      purchase-db:
+        condition: service_healthy
+
   neo4j:
     image: neo4j:5
     container_name: neo4j
@@ -168,4 +203,6 @@ volumes:
   stakeholders-data:
   tour-data:
   blog-data:
+  purchase-data:
   neo4j-data:
+
