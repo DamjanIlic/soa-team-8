@@ -15,10 +15,15 @@ func (r *StakeholderRepository) Create(stakeholder *model.Stakeholder) error {
 	return r.DatabaseConnection.Create(stakeholder).Error
 }
 
+func (r *StakeholderRepository) FindAll() []model.Stakeholder {
+	var stakeholders []model.Stakeholder
+	r.DatabaseConnection.Preload("User").Find(&stakeholders)
+	return stakeholders
+}
+
 func (r *StakeholderRepository) Get(id string) (*model.Stakeholder, error) {
 	var s model.Stakeholder
 
-	// konvertuj string u UUID
 	uid, err := uuid.Parse(id)
 	if err != nil {
 		return nil, err
@@ -33,7 +38,7 @@ func (r *StakeholderRepository) Get(id string) (*model.Stakeholder, error) {
 
 func (r *StakeholderRepository) GetByUserID(userID uuid.UUID) (*model.Stakeholder, error) {
 	var s model.Stakeholder
-	
+
 	if err := r.DatabaseConnection.Preload("User").First(&s, "user_id = ?", userID).Error; err != nil {
 		return nil, err
 	}
@@ -50,7 +55,7 @@ func (r *StakeholderRepository) CreateForUser(userID uuid.UUID, name, surname st
 		Name:    name,
 		Surname: surname,
 	}
-	
+
 	if err := r.DatabaseConnection.Create(stakeholder).Error; err != nil {
 		return nil, err
 	}
