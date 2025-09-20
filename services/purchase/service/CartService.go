@@ -1,7 +1,10 @@
 package service
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
+	"net/http"
 	"purchase/model"
 	"purchase/repo"
 
@@ -26,6 +29,14 @@ func (s *CartService) CreateCart(touristID uuid.UUID) (*model.ShoppingCart, erro
 
 // dodaje item u korpu (auto-kreira korpu ako ne postoji)
 func (s *CartService) AddItemToUserCart(touristID uuid.UUID, tourID uuid.UUID, name string, price float64) (*model.OrderItem, error) {
+	tourStatus, err := s.checkTourStatus(tourID)
+	if err != nil {
+		return nil, errors.New("failed to verify tour status")
+	}
+	if tourStatus != "available" {
+		return nil, errors.New("tour not available for purchase")
+	}
+
 	cart, err := s.CartRepo.GetByTouristID(touristID)
 	if err != nil {
 		// ako korpa ne postoji, kreiraj novu
@@ -110,4 +121,24 @@ func (s *CartService) updateCartTotal(cart *model.ShoppingCart) error {
 	}
 	cart.Total = total
 	return s.CartRepo.Update(cart)
+}
+
+func (s *CartService) checkTourStatus(tourID uuid.UUID) (string, error) {
+	url := fmt.Sprintf("http://tour-service:8080/api/tours/%s/status", tourID)
+
+	client := &http.Client{}
+	resp, err := client.Get(url)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	var result struct {
+		Status string `json:"status"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", err
+	}
+
+	return result.Status, nil
 }
