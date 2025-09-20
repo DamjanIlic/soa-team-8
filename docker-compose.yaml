@@ -155,6 +155,7 @@ services:
       PORT: 8080
     ports:
       - "8087:8080"
+      - "50052:50051"
     depends_on:
       purchase-db:
         condition: service_healthy

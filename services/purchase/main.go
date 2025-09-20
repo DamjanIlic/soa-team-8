@@ -3,15 +3,20 @@ package main
 import (
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
+	"purchase/grpc"
 	"purchase/handler"
 	"purchase/middleware"
 	"purchase/model"
+	"purchase/pb"
 	"purchase/repo"
 	"purchase/service"
 
 	"github.com/gorilla/mux"
+	grpcServer "google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -71,10 +76,34 @@ func main() {
 	cartHandler := &handler.CartHandler{CartService: cartService}
 	tokenHandler := &handler.TokenHandler{TokenService: tokenService}
 
-	startServer(cartHandler, tokenHandler)
+	// gRPC server
+	grpcPurchaseServer := &grpc.PurchaseGRPCServer{
+		TokenService: tokenService,
+	}
+
+	// Pokretanje oba servera
+	go startGRPCServer(grpcPurchaseServer)
+	startHTTPServer(cartHandler, tokenHandler)
 }
 
-func startServer(cartHandler *handler.CartHandler, tokenHandler *handler.TokenHandler) {
+func startGRPCServer(purchaseServer *grpc.PurchaseGRPCServer) {
+	lis, err := net.Listen("tcp", ":50051")
+	if err != nil {
+		log.Fatalf("Failed to listen on port 50051: %v", err)
+	}
+
+	s := grpcServer.NewServer()
+	pb.RegisterPurchaseServiceServer(s, purchaseServer)
+
+	reflection.Register(s)
+
+	log.Println("gRPC Purchase service running on :50051")
+	if err := s.Serve(lis); err != nil {
+		log.Fatalf("Failed to serve gRPC server: %v", err)
+	}
+}
+
+func startHTTPServer(cartHandler *handler.CartHandler, tokenHandler *handler.TokenHandler) {
 	router := mux.NewRouter().StrictSlash(true)
 
 	// JWT middleware
@@ -96,6 +125,6 @@ func startServer(cartHandler *handler.CartHandler, tokenHandler *handler.TokenHa
 	api.HandleFunc("/cart/checkout", tokenHandler.Checkout).Methods("POST")
 
 	port := getEnv("PORT", "8080")
-	log.Printf("Purchase service starting on :%s 🚀\n", port)
+	log.Printf("HTTP Purchase service starting on :%s 🚀\n", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
 }
