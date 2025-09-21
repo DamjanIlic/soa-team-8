@@ -1,0 +1,102 @@
+<div class="min-h-screen flex items-center justify-center bg-gray-100">
+  <div class="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
+    <h2 class="text-2xl font-bold mb-6 text-center">Register</h2>
+
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-4">
+      <!-- Username -->
+      <div>
+        <label class="block mb-1 font-medium">Username</label>
+        <input formControlName="username" type="text" 
+               class="input input-bordered w-full" placeholder="Enter your username" />
+        <div *ngIf="registerForm.get('username')?.touched && registerForm.get('username')?.invalid" 
+            class="text-red-500 text-sm mt-1">
+            <span *ngIf="registerForm.get('username')?.errors?.['required']">Username is required.</span>
+        </div>
+      </div>
+
+      <!-- Email -->
+      <div>
+        <label for="email" class="block font-medium">Email</label>
+        <input
+        type="email"
+        id="email"
+        formControlName="email"
+        placeholder="Enter your email"
+        class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-500"
+        />
+
+        <div *ngIf="registerForm.get('email')?.touched && registerForm.get('email')?.invalid" class="text-red-500 text-sm mt-1">
+        <span *ngIf="registerForm.get('email')?.errors?.['required']">Email is required.</span>
+        <span *ngIf="registerForm.get('email')?.errors?.['email']">Please enter a valid email address.</span>
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div>
+        <label class="block mb-1 font-medium">Password</label>
+        <input formControlName="password" type="password" 
+               class="input input-bordered w-full" placeholder="Enter your password" />
+        <div *ngIf="registerForm.get('password')?.touched && registerForm.get('password')?.invalid" 
+            class="text-red-500 text-sm mt-1">
+            <span *ngIf="registerForm.get('password')?.errors?.['required']">Password is required.</span>
+        </div>
+      </div>
+
+      <!-- Role -->
+      <div>
+        <label class="block mb-1 font-medium">Role</label>
+        <select formControlName="role" class="select select-bordered w-full">
+          <option value="">Select role</option>
+          <option value="tourist">Tourist</option>
+          <option value="guide">Guide</option>
+        </select>
+        <div *ngIf="registerForm.get('role')?.touched && registerForm.get('role')?.invalid" 
+            class="text-red-500 text-sm mt-1">
+            <span *ngIf="registerForm.get('role')?.errors?.['required']">Role is required.</span>
+        </div>
+      </div>
+
+      <!-- Name -->
+      <div>
+        <label class="block mb-1 font-medium">Name</label>
+        <input formControlName="name" type="text" 
+               class="input input-bordered w-full" placeholder="Enter your name" />
+      </div>
+
+      <!-- Surname -->
+      <div>
+        <label class="block mb-1 font-medium">Surname</label>
+        <input formControlName="surname" type="text" 
+               class="input input-bordered w-full" placeholder="Enter your surname" />
+      </div>
+
+      <!-- Profile Image -->
+      <div>
+        <label class="block mb-1 font-medium">Profile image (URL)</label>
+        <input formControlName="profile_image" type="text" 
+               class="input input-bordered w-full" placeholder="Image URL" />
+      </div>
+
+      <!-- Biography -->
+      <div>
+        <label class="block mb-1 font-medium">Biography</label>
+        <textarea formControlName="biography" class="textarea textarea-bordered w-full" rows="3" placeholder="Tell us about yourself"></textarea>
+      </div>
+
+      <!-- Motto -->
+      <div>
+        <label class="block mb-1 font-medium">Motto</label>
+        <input formControlName="motto" type="text" 
+               class="input input-bordered w-full" placeholder="Your favorite quote" />
+      </div>
+
+      <!-- Submit Button -->
+      <button type="submit" [disabled]="registerForm.invalid" 
+              class="btn btn-primary w-full mt-4">Register</button>
+    </form>
+
+    <!-- Messages -->
+    <p class="text-green-600 mt-4" *ngIf="successMessage">{{ successMessage }}</p>
+    <p class="text-red-600 mt-4" *ngIf="errorMessage">{{ errorMessage }}</p>
+  </div>
+</div>

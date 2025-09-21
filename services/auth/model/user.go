@@ -37,6 +37,20 @@ type UserResponse struct {
 	Blocked  bool   `json:"blocked"`
 }
 
+// RegistrationRequest kombinuje podatke za User i Stakeholder
+type RegistrationRequest struct {
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	Role     string `json:"role"`
+	// Stakeholder polja:
+	Name         string `json:"name"`
+	Surname      string `json:"surname"`
+	Biography    string `json:"biography"`
+	Motto        string `json:"motto"`
+	ProfileImage string `json:"profile_image"`
+}
+
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 	if u.ID == uuid.Nil {
 		u.ID = uuid.New()
