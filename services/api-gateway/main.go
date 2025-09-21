@@ -27,6 +27,9 @@ func main() {
 	// Proxy ka StakeholdersService
 	r.PathPrefix("/api/stakeholders").Handler(proxy("http://stakeholders-service:8080"))
 
+	// Proxy ka PurchaseService
+	r.PathPrefix("/api/cart").Handler(proxy("http://purchase-service:8080"))
+
 	log.Println("API Gateway is running on :8000")
 	if err := http.ListenAndServe(":8000", r); err != nil {
 		log.Fatal("Gateway failed: ", err)
