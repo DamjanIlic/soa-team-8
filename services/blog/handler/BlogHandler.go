@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"blog/metrics"
 	"blog/middleware" // ili gde god je tvoj middleware
 	"blog/model"
 	"blog/service"
@@ -8,11 +9,14 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"go.opentelemetry.io/otel"
 )
 
 type BlogHandler struct {
 	BlogService *service.BlogService
 }
+
+var tracer = otel.Tracer("blog-service")
 
 func (h *BlogHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var blog model.Blog
@@ -33,17 +37,22 @@ func (h *BlogHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(blog)
+
+	metrics.BlogPostsProcessed.Inc()
 }
 
 func (h *BlogHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	blogs, err := h.BlogService.GetAll()
+	// Start tracing span
+	_, span := tracer.Start(r.Context(), "GetAllBlogs")
+	defer span.End()
+
+	blogs, err := h.BlogService.GetAll() // možeš proslediti ctx ako želiš da pratiš deeper calls
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	json.NewEncoder(w).Encode(blogs)
 }
-
 func (h *BlogHandler) Get(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 	blog, err := h.BlogService.Get(id)
