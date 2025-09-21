@@ -11,6 +11,7 @@ import (
 
 func main() {
 	r := mux.NewRouter()
+	handler := enableCORS(r)
 
 	// Proxy ka TourService
 	r.PathPrefix("/api/tours").Handler(proxy("http://tour-service:8080"))
@@ -28,7 +29,7 @@ func main() {
 	r.PathPrefix("/api/stakeholders").Handler(proxy("http://stakeholders-service:8080"))
 
 	log.Println("API Gateway is running on :8000")
-	if err := http.ListenAndServe(":8000", r); err != nil {
+	if err := http.ListenAndServe(":8000", handler); err != nil {
 		log.Fatal("Gateway failed: ", err)
 	}
 }
@@ -40,4 +41,20 @@ func proxy(target string) http.Handler {
 		log.Fatalf("Cannot parse URL %s: %v", target, err)
 	}
 	return httputil.NewSingleHostReverseProxy(url)
+}
+
+func enableCORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:4200")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		// OPTIONS preflight zahtev
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }

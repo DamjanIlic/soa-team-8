@@ -1,0 +1,19 @@
+<div class="p-6 bg-white rounded shadow max-w-md mx-auto mt-6" *ngIf="user.name">
+  <h2 class="text-2xl font-semibold mb-4">User Profile</h2>
+
+  <div class="mb-2">
+    <p class="text-lg font-medium">Name: {{ user.name }}</p>
+    <p class="text-lg font-medium">Surname: {{ user.surname }}</p>
+    <p class="text-lg font-medium">Profile Image: {{ user.profileImage }}</p>
+  </div>
+
+  <div class="mb-2">
+    <h3 class="font-semibold">Biography:</h3>
+    <p>{{ user.biography }}</p>
+  </div>
+
+  <div>
+    <h3 class="font-semibold">Motto:</h3>
+    <p class="italic text-gray-600">{{ user.motto }}</p>
+  </div>
+</div>
