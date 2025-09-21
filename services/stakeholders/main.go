@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"stakeholder/handler"
+	"stakeholder/middleware"
 	"stakeholder/model"
 	"stakeholder/repo"
 	"stakeholder/service"
@@ -66,19 +67,17 @@ func startServer(handler *handler.StakeholderHandler, userHandler *handler.UserH
 	router := mux.NewRouter().StrictSlash(true)
 
 	api := router.PathPrefix("/api").Subrouter()
+	api.Use(middleware.JWTMiddleware)
 
-	api.HandleFunc("/stakeholders/{id}", handler.Get).Methods("GET")
 	api.HandleFunc("/stakeholders", handler.Create).Methods("POST")
 
 	// admin endpoint
-	api.HandleFunc("/stakeholders/admin/users", userHandler.GetAllUsers).Methods("GET")
+	api.HandleFunc("/stakeholders/admin/all", handler.GetAll).Methods("GET")
 
-	// endpoint za registraciju neregistrovanih korisnika
-	api.HandleFunc("/stakeholders/register", userHandler.RegisterUser).Methods("POST")
+	api.HandleFunc("/stakeholders/profile", handler.GetProfile).Methods("GET")
+	api.HandleFunc("/stakeholders/profile", handler.UpdateProfile).Methods("PUT")
 
-	//stakeholder db
-	api.HandleFunc("/stakeholders/profile/{userId}", handler.GetProfile).Methods("GET")
-	api.HandleFunc("/stakeholders/profile/{userId}", handler.UpdateProfile).Methods("PUT")
+	api.HandleFunc("/stakeholders/{id}", handler.Get).Methods("GET")
 
 	api.HandleFunc("/stakeholders/admin/users/{id}/block", userHandler.BlockUser).Methods("PUT")
 

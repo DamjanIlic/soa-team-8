@@ -35,6 +35,7 @@ func initDB() *gorm.DB {
 
 	db.AutoMigrate(&model.Tour{})
 	db.AutoMigrate(&model.KeyPoint{})
+	db.AutoMigrate(&model.Review{})
 
 	return db
 }
@@ -51,20 +52,25 @@ func main() {
 
 	tourRepo := &repo.TourRepository{DatabaseConnection: db}
 	keyPointRepo := &repo.KeyPointRepository{DatabaseConnection: db}
+	reviewRepo := &repo.ReviewRepository{DatabaseConnection: db}
 
 	tourService := &service.TourService{TourRepo: tourRepo}
 	keyPointService := &service.KeyPointService{
 		KeyPointRepo: keyPointRepo,
 		TourRepo:     tourRepo,
 	}
+	reviewService := &service.ReviewService{
+		ReviewRepo: reviewRepo,
+	}
 
 	tourHandler := &handler.TourHandler{TourService: tourService}
 	keyPointHandler := &handler.KeyPointHandler{KeyPointService: keyPointService}
+	reviewHandler := &handler.ReviewHandler{ReviewService: reviewService}
 
-	startServer(tourHandler, keyPointHandler)
+	startServer(tourHandler, keyPointHandler, reviewHandler)
 }
 
-func startServer(tourHandler *handler.TourHandler, keyPointHandler *handler.KeyPointHandler) {
+func startServer(tourHandler *handler.TourHandler, keyPointHandler *handler.KeyPointHandler, reviewHandler *handler.ReviewHandler) {
 	router := mux.NewRouter().StrictSlash(true)
 
 	// JWT middleware na svim API rutama
@@ -83,6 +89,10 @@ func startServer(tourHandler *handler.TourHandler, keyPointHandler *handler.KeyP
 	api.HandleFunc("/tours/keypoints/{id}", keyPointHandler.GetKeyPoint).Methods("GET")
 	api.HandleFunc("/tours/keypoints/{id}", keyPointHandler.UpdateKeyPoint).Methods("PUT")
 	api.HandleFunc("/tours/keypoints/{id}", keyPointHandler.DeleteKeyPoint).Methods("DELETE")
+
+	// Review endpoints
+	api.HandleFunc("/tours/{tourId}/reviews", reviewHandler.CreateReview).Methods("POST")
+	api.HandleFunc("/tours/{tourId}/reviews", reviewHandler.GetReviewsByTour).Methods("GET")
 
 	// Staticki fajlovi
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static/")))

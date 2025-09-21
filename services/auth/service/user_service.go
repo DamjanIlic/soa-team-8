@@ -1,11 +1,11 @@
 package service
 
 import (
-	"auth-service/model"
-	"auth-service/repo"
+	"auth/model"
+	"auth/repo"
 	"errors"
 
-	"auth-service/util"
+	"auth/util"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -15,22 +15,32 @@ type UserService struct {
 }
 
 // Registracija korisnika
-func (s *UserService) RegisterUser(user *model.User) error {
+func (s *UserService) RegisterUser(user *model.User) (string, error) {
 	if user.Role != model.RoleTourist && user.Role != model.RoleGuide {
-		return errors.New("invalid role")
+		return "", errors.New("invalid role")
 	}
 
 	if _, err := s.UserRepo.FindByEmail(user.Email); err == nil {
-		return errors.New("email already exists")
+		return "", errors.New("email already exists")
 	}
 	if _, err := s.UserRepo.FindByUsername(user.Username); err == nil {
-		return errors.New("username already exists")
+		return "", errors.New("username already exists")
 	}
 
 	hashed, _ := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	user.Password = string(hashed)
 
-	return s.UserRepo.Create(user)
+	if err := s.UserRepo.Create(user); err != nil {
+		return "", err
+	}
+
+	// generisi JWT odmah nakon registracije
+	token, err := util.GenerateJWT(user.ID.String(), string(user.Role))
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
 }
 
 // Login korisnika i vraćanje JWT tokena
@@ -50,6 +60,15 @@ func (s *UserService) Login(email, password string) (string, error) {
 	}
 
 	return token, nil
+}
+
+// Dobavljanje korisnika po ID-u
+func (s *UserService) GetUser(userID string) (*model.User, error) {
+	user, err := s.UserRepo.FindByID(userID)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }
 
 // Blokiranje korisnika

@@ -1,7 +1,7 @@
 package repo
 
 import (
-	"auth-service/model"
+	"auth/model"
 
 	"gorm.io/gorm"
 )

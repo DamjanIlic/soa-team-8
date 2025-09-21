@@ -2,6 +2,7 @@ package main
 
 import (
 	"blog/handler"
+	"blog/middleware"
 	"blog/repo"
 	"blog/service"
 	"log"
@@ -59,15 +60,17 @@ func main() {
 	api := router.PathPrefix("/api").Subrouter()
 
 	// Blog routes
-	api.HandleFunc("/blogs", blogHandler.Create).Methods("POST")
 	api.HandleFunc("/blogs", blogHandler.GetAll).Methods("GET")
 	api.HandleFunc("/blogs/{id}", blogHandler.Get).Methods("GET")
-	api.HandleFunc("/blogs/{id}/like", blogHandler.Like).Methods("POST")
-	api.HandleFunc("/blogs/{id}/unlike", blogHandler.Unlike).Methods("POST")
 
-	// Comment routes
-	api.HandleFunc("/blogs/{id}/comments", commentHandler.Create).Methods("POST")
+	// Kreiranje bloga i like/unlike zahtevaju autentifikaciju
+	api.Handle("/blogs", middleware.JWTMiddleware(http.HandlerFunc(blogHandler.Create))).Methods("POST")
+	api.Handle("/blogs/{id}/like", middleware.JWTMiddleware(http.HandlerFunc(blogHandler.Like))).Methods("POST")
+	api.Handle("/blogs/{id}/unlike", middleware.JWTMiddleware(http.HandlerFunc(blogHandler.Unlike))).Methods("POST")
+
+	// Comment routes (ako želiš, kreiranje komentara može takođe zahtevati JWT)
 	api.HandleFunc("/blogs/{id}/comments", commentHandler.GetByBlogID).Methods("GET")
+	api.Handle("/blogs/{id}/comments", middleware.JWTMiddleware(http.HandlerFunc(commentHandler.Create))).Methods("POST")
 
 	// Start server
 	port := getEnv("PORT", "8080")
