@@ -9,56 +9,37 @@
     </div>
   </div>
 
+  <!-- Loader / Error -->
+  <div *ngIf="loading" class="text-gray-500 mb-4">Učitavanje blogova...</div>
+  <div *ngIf="error" class="text-red-500 mb-4">{{ error }}</div>
+
   <!-- Blog kartice -->
   <div class="container mx-auto px-4 w-3/4">
     <div class="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      
-      <!-- Blog Card -->
-      <div class="bg-base-200 border border-base-300 flex flex-col h-80">
-        <figure class="h-40 w-full">
-          <img
-            src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e"
-            alt="Blog image"
-            class="object-cover w-full h-full"
-          />
-        </figure>
-        <div class="p-4 flex flex-col flex-1">
-          <h3 class="text-lg font-bold mb-2">Naslov blog posta</h3>
-          <p
-            class="text-sm text-gray-500 line-clamp-3 overflow-hidden"
-          >
-            Ovo je placeholder tekst za opis bloga. Ako je tekst predugačak, pojaviće se tačkice na kraju...
-          </p>
-          <div class="mt-auto pt-3 text-sm flex items-center justify-between text-gray-400">
-            <span>Autor Ime</span>
-            <span>08.30.2025</span>
+      <ng-container *ngFor="let blog of blogs">
+        <a
+          [routerLink]="['/blogs', blog.id]"
+          class="bg-base-200 border border-base-300 flex flex-col h-80 hover:shadow-lg transition"
+        >
+          <figure class="h-40 w-full">
+            <img
+              [src]="blog.image_url || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e'"
+              alt="Blog image"
+              class="object-cover w-full h-full"
+            />
+          </figure>
+          <div class="p-4 flex flex-col flex-1">
+            <h3 class="text-lg font-bold mb-2">{{ blog.title }}</h3>
+            <p class="text-sm text-gray-500 line-clamp-3 overflow-hidden">
+              {{ blog.content }}
+            </p>
+            <div class="mt-auto pt-3 text-sm flex items-center justify-between text-gray-400">
+              <span>Autor Ime</span>
+              <span>{{ blog.created_at | date: 'MM.dd.yyyy' }}</span>
+            </div>
           </div>
-        </div>
-      </div>
-
-      <!-- Kopiraj još kartica -->
-      <div class="bg-base-200 border border-base-300 flex flex-col h-80">
-        <figure class="h-40 w-full">
-          <img
-            src="https://images.unsplash.com/photo-1473187983305-f615310e7daa"
-            alt="Blog image"
-            class="object-cover w-full h-full"
-          />
-        </figure>
-        <div class="p-4 flex flex-col flex-1">
-          <h3 class="text-lg font-bold mb-2">Drugi blog post</h3>
-          <p
-            class="text-sm text-gray-500 line-clamp-3 overflow-hidden"
-          >
-            Ovde ide placeholder tekst za drugi blog post, koji može biti malo duži pa da se skraćuje…
-          </p>
-          <div class="mt-auto pt-3 text-sm flex items-center justify-between text-gray-400">
-            <span>Autor Drugi</span>
-            <span>08.29.2025</span>
-          </div>
-        </div>
-      </div>
-
+        </a>
+      </ng-container>
     </div>
   </div>
 </div>

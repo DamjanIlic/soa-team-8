@@ -1,0 +1,32 @@
+<div class="container mx-auto px-4 py-8" *ngIf="blog">
+  <!-- Slika -->
+  <figure class="w-full h-64 mb-6">
+    <img
+      [src]="blog.image_url"
+      alt="Blog image"
+      class="object-cover w-full h-full rounded-lg shadow-md"
+    />
+  </figure>
+
+  <!-- Naslov i autor -->
+  <h1 class="text-4xl font-bold mb-2">{{ blog.title }}</h1>
+  <p class="text-gray-500 mb-6">
+    Autor: <span class="font-medium">Nepoznat</span> •
+    {{ blog.created_at | date: 'mediumDate' }}
+  </p>
+
+  <!-- Markdown sadržaj -->
+  <markdown [data]="blog.content"></markdown>
+
+  <!-- Like / Unlike -->
+  <div class="flex items-center gap-4 mt-6">
+    <button class="btn btn-primary" (click)="likeBlog()">Like</button>
+    <button class="btn btn-secondary" (click)="unlikeBlog()">Unlike</button>
+    <span class="text-gray-600">Likes: {{ blog.likes }}</span>
+  </div>
+
+  <!-- Placeholder za komentare -->
+  <div class="mt-10 p-6 border border-base-300 bg-base-200 rounded-lg">
+    <p class="text-gray-500 italic">Komentari dolaze uskoro...</p>
+  </div>
+</div>
