@@ -1,0 +1,81 @@
+<nav class="bg-white shadow-lg">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="flex justify-between h-16">
+      <div class="flex">
+        <!-- Logo -->
+        <div class="flex-shrink-0 flex items-center">
+          <a routerLink="/" class="text-xl font-bold text-blue-600">TourismApp</a>
+        </div>
+        
+        <!-- Navigation Links -->
+        <div class="ml-10 flex items-center space-x-4">
+          
+          <!-- Neregistrovan korisnik -->
+          <ng-container *ngIf="!isLoggedIn">
+            <a routerLink="/auth/login" class="text-gray-700 hover:text-blue-600 px-3 py-2">Login</a>
+            <a routerLink="/auth/register" class="text-gray-700 hover:text-blue-600 px-3 py-2">Register</a>
+          </ng-container>
+
+          <!-- Admin -->
+          <ng-container *ngIf="isLoggedIn && userRole === 'admin'">
+            <a routerLink="/admin/users" class="text-gray-700 hover:text-blue-600 px-3 py-2">Users</a>
+            <a routerLink="/reviews" class="text-gray-700 hover:text-blue-600 px-3 py-2">Reviews</a>
+          </ng-container>
+
+          <!-- Ulogovan korisnik (tourist ili guide) -->
+          <ng-container *ngIf="isLoggedIn && (userRole === 'tourist' || userRole === 'guide')">
+            <a routerLink="/profile" class="text-gray-700 hover:text-blue-600 px-3 py-2">Profile</a>
+            
+            <!-- Blog dropdown -->
+            <div class="relative group">
+              <button class="text-gray-700 hover:text-blue-600 px-3 py-2">
+                Blog <svg class="w-4 h-4 inline ml-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+              </button>
+              <div class="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <a routerLink="/blog/create" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Create Blog</a>
+                <a routerLink="/blog/feed" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Blog Feed</a>
+              </div>
+            </div>
+          </ng-container>
+
+          <!-- Tourist specific -->
+          <ng-container *ngIf="isLoggedIn && userRole === 'tourist'">
+            <!-- Tours dropdown -->
+            <div class="relative group">
+              <button class="text-gray-700 hover:text-blue-600 px-3 py-2">
+                Tours <svg class="w-4 h-4 inline ml-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+              </button>
+              <div class="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <a routerLink="/tours/browse" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Browse Tours</a>
+                <a routerLink="/tours/my-tours" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Tours</a>
+                <a routerLink="/tours/position-simulator" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Position Simulator</a>
+                <a routerLink="/reviews" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Reviews</a>
+              </div>
+            </div>
+            <a routerLink="/cart" class="text-gray-700 hover:text-blue-600 px-3 py-2">Shopping Cart</a>
+          </ng-container>
+
+          <!-- Guide specific -->
+          <ng-container *ngIf="isLoggedIn && userRole === 'guide'">
+            <!-- Tours dropdown -->
+            <div class="relative group">
+              <button class="text-gray-700 hover:text-blue-600 px-3 py-2">
+                Tours <svg class="w-4 h-4 inline ml-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+              </button>
+              <div class="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <a routerLink="/tours/create" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Create Tour</a>
+                <a routerLink="/tours/my-tours" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Tours</a>
+                <a routerLink="/reviews" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Reviews</a>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+
+      <!-- Logout button za ulogovanog korisnika -->
+      <div class="flex items-center" *ngIf="isLoggedIn">
+        <button (click)="logout()" class="text-gray-700 hover:text-red-600 px-3 py-2">Logout</button>
+      </div>
+    </div>
+  </div>
+</nav>

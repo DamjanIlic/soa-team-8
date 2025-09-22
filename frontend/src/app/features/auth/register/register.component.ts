@@ -66,7 +66,7 @@ export class RegisterComponent {
           });
 
         this.registerForm.reset();
-        this.router.navigate(['/dashboard']);
+        this.router.navigate(['/auth/login']);
       },
       error: (err) => {
         this.errorMessage = err.error?.message || 'An error occurred during registration.';
