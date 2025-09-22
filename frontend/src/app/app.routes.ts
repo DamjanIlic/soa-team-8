@@ -38,7 +38,7 @@ export const routes: Routes = [
   { path: 'profile', component: ProfileComponent },
   
   // Admin routes
-  { path: 'admin/users', component: UsersComponent },
+  // { path: 'admin/users', component: UsersComponent },
   
   // Blog routes
   { path: 'blog/create', component: CreateBlogComponent },
