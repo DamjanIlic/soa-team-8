@@ -37,4 +37,15 @@ export class StakeholdersService {
   unblockUser(userId: string): Observable<any> {
     return this.http.put(`${this.apiUrl}/admin/users/${userId}/unblock`, {});
   }
+
+  updateProfile(profileData: any): Observable<any> {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      throw new Error('No token found');
+    }
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`
+    });
+    return this.http.put(`${this.apiUrl}/profile`, profileData, { headers });
+  }
 }
