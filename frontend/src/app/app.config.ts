@@ -5,7 +5,7 @@ import { routes } from './app.routes';
 import { HttpClientModule } from '@angular/common/http';
 
 import { provideMarkdown } from 'ngx-markdown';
-
+import { MarkdownModule } from 'ngx-markdown';
 
 // export const appConfig: ApplicationConfig = {
 //   providers: [provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(routes), importProvidersFrom(HttpClientModule),
@@ -21,5 +21,7 @@ export const appConfig: ApplicationConfig = {
     importProvidersFrom(ReactiveFormsModule),
     provideHttpClient(),
     importProvidersFrom(HttpClientModule),
+    MarkdownModule,
+    provideMarkdown()
   ]
 };

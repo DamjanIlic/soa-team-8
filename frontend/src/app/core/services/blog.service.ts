@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { Blog } from '../models/blog.model';
-
+import { Comment } from '../models/comment.model';
 @Injectable({
   providedIn: 'root'
 })
@@ -39,5 +39,24 @@ export class BlogService {
       {},
       { headers: { Authorization: `Bearer ${token}` } }
     ).pipe(map(res => res.likes));
+  }
+
+  // ================== COMMENT METHODS ==================
+
+  getComments(blogId: string): Observable<Comment[]> {
+    return this.http.get<Comment[]>(`${this.apiUrl}/${blogId}/comments`);
+  }
+
+  createComment(blogId: string, comment: Comment, token: string): Observable<Comment> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    });
+
+    return this.http.post<Comment>(
+      `${this.apiUrl}/${blogId}/comments`,
+      comment,
+      { headers }
+    );
   }
 }

@@ -25,8 +25,31 @@
     <span class="text-gray-600">Likes: {{ blog.likes }}</span>
   </div>
 
-  <!-- Placeholder za komentare -->
-  <div class="mt-10 p-6 border border-base-300 bg-base-200 rounded-lg">
-    <p class="text-gray-500 italic">Komentari dolaze uskoro...</p>
+<!-- Komentari -->
+<div class="mt-10 p-6 border border-base-300 bg-base-200 rounded-lg">
+  <h2 class="text-2xl font-bold mb-4">Komentari</h2>
+
+  <!-- Lista komentara -->
+  <div *ngIf="comments.length > 0; else noComments">
+    <div *ngFor="let c of comments" class="mb-4 p-3 bg-base-100 rounded-lg shadow-sm">
+      <p>{{ c.text }}</p>
+      <span class="text-gray-500 text-sm">{{ c.createdAt | date:'medium' }}</span>
+    </div>
   </div>
+
+  <ng-template #noComments>
+    <p class="text-gray-500 italic">Nema komentara za ovaj blog.</p>
+  </ng-template>
+
+  <!-- Forma za dodavanje komentara -->
+  <div class="mt-6">
+    <textarea
+      [(ngModel)]="newCommentText"
+      placeholder="Napiši komentar..."
+      class="w-full p-2 border rounded-lg mb-2"
+      rows="3"
+    ></textarea>
+    <button class="btn btn-primary" (click)="addComment()">Dodaj komentar</button>
+  </div>
+</div>
 </div>
