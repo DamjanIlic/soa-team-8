@@ -22,7 +22,7 @@ export const appConfig: ApplicationConfig = {
     importProvidersFrom(ReactiveFormsModule),
     provideHttpClient(withInterceptorsFromDi()),
     { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
-    importProvidersFrom(HttpClientModule),
+    //importProvidersFrom(HttpClientModule),
     MarkdownModule,
     provideMarkdown(),
   ]

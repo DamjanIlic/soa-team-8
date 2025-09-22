@@ -14,6 +14,7 @@
   <div *ngIf="error" class="text-red-500 mb-4">{{ error }}</div>
 
   <!-- Blog kartice -->
+  <!-- [src]="blog.image_url || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e'" -->
   <div class="container mx-auto px-4 w-3/4">
     <div class="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       <ng-container *ngFor="let blog of blogs">
@@ -23,7 +24,7 @@
         >
           <figure class="h-40 w-full">
             <img
-              [src]="blog.image_url || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e'"
+              [src]="'https://theroostingplace.blog/wp-content/uploads/2020/12/qi-bin-w4hbafegiac-unsplash.jpg'"
               alt="Blog image"
               class="object-cover w-full h-full"
             />

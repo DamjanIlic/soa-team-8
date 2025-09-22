@@ -14,7 +14,7 @@ export class ProfileComponent implements OnInit {
   constructor(private stakeholdersService: StakeholdersService) {}
 
   ngOnInit(): void {
-    console.log('Token:', localStorage.getItem('token'));
+    console.log('Token:', localStorage.getItem('access_token'));
 
     this.stakeholdersService.getProfile().subscribe({
       next: (data) => {

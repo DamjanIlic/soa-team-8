@@ -89,8 +89,12 @@ func main() {
 	likeRepo := &repo.LikeRepository{Collection: db.Collection("likes")}
 
 	// Services
+	stakeholderClient := service.NewStakeholderClient("http://stakeholders-service:8080")
 	blogService := &service.BlogService{BlogRepo: blogRepo, LikeRepo: likeRepo}
-	commentService := &service.CommentService{CommentRepo: commentRepo}
+	commentService := &service.CommentService{
+		CommentRepo:       commentRepo,
+		StakeholderClient: stakeholderClient,
+	}
 
 	// Handlers
 	blogHandler := &handler.BlogHandler{BlogService: blogService}

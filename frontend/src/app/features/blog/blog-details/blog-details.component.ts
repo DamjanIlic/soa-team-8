@@ -7,6 +7,9 @@ import { Blog } from '../../../core/models/blog.model';
 import { HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms'; // za ngModel
 import { Comment } from '../../../core/models/comment.model';
+import { FollowService } from '../../../core/services/follow.service';
+import { StakeholdersService } from '../../../core/services/stakeholders.service';
+
 @Component({
   selector: 'app-blog-details',
   standalone: true,
@@ -23,19 +26,54 @@ export class BlogDetailsComponent implements OnInit {
   blog?: Blog;
   blogId!: string;
   comments: Comment[] = [];
+  user_id = "";
   newCommentText = '';
-
+  followingMap: Record<string, boolean> = {};
+  a = 5
+  currentUser: any;
   // tmp jwt
-  token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTg3NDExODksInJvbGUiOiJ0b3VyaXN0IiwidXNlcl9pZCI6IjVkOGNmMzcxLTViZmQtNDlkMS04YjI4LWNlMzYzMjE2YTZkYiJ9.lpxuWbl19GUiiX7ucc1bPiZE1UWkM7NkiG_3RlB8J90"
   constructor(
     private route: ActivatedRoute,
-    private blogService: BlogService
+    private blogService: BlogService,
+    private followService: FollowService,
+    private stakeholdersService: StakeholdersService
   ) {}
 
   ngOnInit(): void {
     this.blogId = this.route.snapshot.paramMap.get('id')!;
+    this.loadCurrentUser();
+    const userId = this.getCurrentUserId();
+    if (userId){
+      this.user_id = userId
+    }
+    // this.currentUser = { user_id: userId };
+    // console.log(this.currentUser)
     this.loadBlog();
     this.loadComments();
+    this.loadFollowing();
+  }
+  loadCurrentUser(): void {
+    this.stakeholdersService.getProfile().subscribe({
+      next: (user) => {
+        this.currentUser = user; 
+        console.log('Current user:', this.currentUser);
+      },
+      error: (err) => {
+        console.error('Failed to load current user', err);
+      }
+    });
+  }
+  private getCurrentUserId(): string | null {
+    const token = localStorage.getItem('access_token'); // gde čuvaš JWT
+    if (!token) return null;
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.user_id; // ili kako se polje zove u JWT
+    } catch (e) {
+      console.error('Invalid token', e);
+      return null;
+    }
   }
 
   loadBlog(): void {
@@ -53,14 +91,14 @@ export class BlogDetailsComponent implements OnInit {
   }
 
   likeBlog(): void {
-    this.blogService.like(this.blogId, this.token).subscribe({
+    this.blogService.like(this.blogId).subscribe({
       next: (likes) => { if (this.blog) this.blog.likes = likes; },
       error: (err) => console.error(err)
     });
   }
 
   unlikeBlog(): void {
-    this.blogService.unlike(this.blogId, this.token).subscribe({
+    this.blogService.unlike(this.blogId).subscribe({
       next: (likes) => { if (this.blog) this.blog.likes = likes; },
       error: (err) => console.error(err)
     });
@@ -70,16 +108,71 @@ export class BlogDetailsComponent implements OnInit {
     if (!this.newCommentText.trim()) return;
 
     const comment: Comment = {
+      username: 'You',
       blogId: this.blogId,
       text: this.newCommentText.trim()
     };
 
-    this.blogService.createComment(this.blogId, comment, this.token).subscribe({
+    this.blogService.createComment(this.blogId, comment).subscribe({
       next: (c) => {
+        c.username = 'You';
         this.comments.push(c);
         this.newCommentText = '';
       },
       error: (err) => console.error(err)
     });
+  }
+
+  
+  followUser(targetUserId: string) {
+    if (!targetUserId) {
+      console.warn('No userId to follow');
+      return;
+    }
+
+    this.followService.followUser(targetUserId).subscribe({
+      next: (res) => {
+        console.log('Successfully followed user', res);
+        // Update local map
+        this.followingMap[targetUserId] = true;
+      },
+      error: (err) => {
+        console.error('Failed to follow user', err);
+      }
+    });
+  }
+
+  unfollowUser(targetUserId: string) {
+    if (!targetUserId) {
+      console.warn('No userId to unfollow');
+      return;
+    }
+
+    this.followService.unfollowUser(targetUserId).subscribe({
+      next: (res) => {
+        console.log('Successfully unfollowed user', res);
+        // Update local map
+        delete this.followingMap[targetUserId];
+      },
+      error: (err) => {
+        console.error('Failed to unfollow user', err);
+      }
+    });
+  }
+  loadFollowing(): void {
+    this.followService.getFollowing().subscribe({
+      next: (res: { following: string[] }) => {
+        this.followingMap = {};
+        res.following.forEach(id => this.followingMap[id] = true);
+      },
+      error: (err) => console.error('Failed to load following', err)
+    });
+  }
+
+  isFollowing(userId: string): boolean {
+    if (userId === 'test') {
+      return false;
+    }
+    return !!this.followingMap[userId];
   }
 }
