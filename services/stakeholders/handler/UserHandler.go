@@ -78,3 +78,17 @@ func (h *UserHandler) BlockUser(w http.ResponseWriter, r *http.Request) {
 		"message": "User blocked successfully",
 	})
 }
+
+func (h *UserHandler) UnblockUser(w http.ResponseWriter, r *http.Request) {
+	userID := mux.Vars(r)["id"]
+
+	if err := h.UserService.UnblockUser(userID); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "User unblocked successfully",
+	})
+}

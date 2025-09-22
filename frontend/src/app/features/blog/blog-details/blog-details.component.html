@@ -1,0 +1,95 @@
+<div class="container mx-auto px-4 py-8" *ngIf="blog">
+  <!-- Slika -->
+  <figure class="w-full h-64 mb-6">
+    <img
+      [src]="'https://theroostingplace.blog/wp-content/uploads/2020/12/qi-bin-w4hbafegiac-unsplash.jpg'"
+      alt="Blog image"
+      class="object-cover w-full h-full shadow-sm"
+    />
+  </figure>
+
+  <!-- Naslov i autor -->
+  <h1 class="text-4xl font-bold mb-2">{{ blog.title }}</h1>
+  <p class="text-gray-600 mb-6">
+    Autor: <span class="font-medium">Nepoznat</span> •
+    {{ blog.created_at | date: 'mediumDate' }}
+  </p>
+
+  <!-- Markdown sadržaj -->
+  <markdown [data]="blog.content"></markdown>
+
+  <!-- Like / Unlike -->
+  <div class="flex items-center gap-4 mt-6">
+    <button class="px-4 py-2 font-medium bg-blue-600 text-white hover:bg-blue-700" (click)="likeBlog()">Like</button>
+    <button class="px-4 py-2 font-medium bg-gray-200 text-gray-800 hover:bg-gray-300" (click)="unlikeBlog()">Unlike</button>
+    <span class="text-gray-600">Likes: {{ blog.likes }}</span>
+  </div>
+
+  <!-- Komentari -->
+  <div class="mt-10 p-6 border border-gray-300 bg-white rounded-sm">
+    <h2 class="text-2xl font-bold mb-4">Komentari</h2>
+
+    <!-- Lista komentara -->
+    <div *ngFor="let c of comments" class="mb-6 flex gap-4 items-start border-b border-gray-200 pb-4 relative">
+      <!-- Avatar korisnika -->
+      <div class="flex-shrink-0 relative group">
+        <img
+          [src]="c.avatarUrl || 'https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png'"
+          alt="avatar"
+          class="w-14 h-14 object-cover border border-gray-200 cursor-pointer"
+        />
+
+        <!-- Tooltip / Popup na hover -->
+        <div
+          class="absolute left-16 top-0 w-48 p-3 bg-white border border-gray-300 shadow-lg rounded-md opacity-0 group-hover:opacity-100 transition-opacity z-50"
+        >
+          <div class="font-semibold mb-2">{{ c.username || 'Nepoznat' }}</div>
+          <button
+            class="w-full px-2 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+            *ngIf="!isFollowing(c.user_id || 'test') && c.user_id != user_id"
+            (click)="followUser(c.user_id || 'test')"
+          >
+            Follow
+          </button>
+
+          <button
+            class="w-full px-2 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+            *ngIf="isFollowing(c.user_id || 'test') && c.user_id != user_id"
+            (click)="unfollowUser(c.user_id || 'test')"
+          >
+            Unfollow
+          </button>
+        </div>
+      </div>
+
+      <!-- Sadržaj komentara -->
+      <div class="flex-1">
+        <div class="flex items-center justify-between mb-2">
+          <span class="font-semibold text-gray-800">
+            {{ c.user_id === user_id ? 'You' : (c.username || 'Nepoznat') }}
+          </span>
+          <span class="text-gray-400 text-sm">{{ c.createdAt | date:'short' }}</span>
+        </div>
+        <p class="text-gray-700 leading-relaxed">{{ c.text }}</p>
+      </div>
+    </div>
+
+    <!-- Dodavanje novog komentara -->
+    <div class="mt-6">
+      <h3 class="text-xl font-semibold mb-2">Dodaj komentar</h3>
+      <textarea
+        [(ngModel)]="newCommentText"
+        rows="3"
+        placeholder="Napiši komentar..."
+        class="w-full p-2 border border-gray-300 rounded mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      ></textarea>
+      <button
+        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        (click)="addComment()"
+        [disabled]="!newCommentText.trim()"
+      >
+        Pošalji
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,27 +1,31 @@
 import { Routes } from '@angular/router';
+import { UserListComponent } from './features/admin/user-list/user-list.component';
+import { BlogListComponent } from './features/blog/blog-list/blog-list.component';
+import { BlogDetailsComponent } from './features/blog/blog-details/blog-details.component';
 import { RegisterComponent } from './features/auth/register/register.component';
 import { LoginComponent } from './features/auth/login/login.component';
 import { WelcomeComponent } from './features/auth/welcome/welcome.component';
 import { DashboardComponent } from './features/stakeholders/dashboard/dashboard.component';
 import { ProfileComponent } from './features/stakeholders/profile/profile.component';
-// Admin components
+
 import { UsersComponent } from './features/admin/users/users.component';
 
-// Blog components  
 import { CreateBlogComponent } from './features/blog/create-blog/create-blog.component';
 import { BlogFeedComponent } from './features/blog/blog-feed/blog-feed.component';
 
-// Tours components
+
 import { BrowseToursComponent } from './features/tours/browse-tours/browse-tours.component';
 import { CreateTourComponent } from './features/tours/create-tour/create-tour.component';
 import { MyToursComponent } from './features/tours/my-tours/my-tours.component';
 import { PositionSimulatorComponent } from './features/tours/position-simulator/position-simulator.component';
 
-// Reviews component
+
 import { ReviewsComponent } from './features/reviews/reviews.component';
 
-// Cart component
+
 import { ShoppingCartComponent } from './features/cart/shopping-cart.component';
+
+
 export const routes: Routes = [
   // Auth routes
   { path: '', component: WelcomeComponent },
@@ -34,7 +38,7 @@ export const routes: Routes = [
   { path: 'profile', component: ProfileComponent },
   
   // Admin routes
-  { path: 'admin/users', component: UsersComponent },
+  // { path: 'admin/users', component: UsersComponent },
   
   // Blog routes
   { path: 'blog/create', component: CreateBlogComponent },
@@ -56,7 +60,13 @@ export const routes: Routes = [
   { 
     path: 'dashboard', component: DashboardComponent,
     children: [
-      { path: 'profile', component: ProfileComponent }
+        { path: 'profile', component: ProfileComponent }
     ]
-  },
+    },
+    { path: 'admin/users', component: UserListComponent },
+    { 
+        path: 'blogs', 
+        loadComponent: () => import('./features/blog/blog-list/blog-list.component').then(m => m.BlogListComponent)
+    },
+    { path: 'blogs/:id', component: BlogDetailsComponent }
 ];

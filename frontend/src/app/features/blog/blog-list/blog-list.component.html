@@ -1,0 +1,64 @@
+<div class="bg-base-100 min-h-screen flex flex-col items-center">
+  <!-- Hero sekcija -->
+  <div class="w-full bg-base-200 py-12 mb-8">
+    <div class="container mx-auto px-4 text-center">
+      <h1 class="text-4xl font-bold mb-4">Blogovi</h1>
+      <p class="text-gray-500 max-w-2xl mx-auto">
+        Dobrodošli na naš blog. Ovde ćete pronaći najnovije vesti, članke i vodiče.
+      </p>
+    </div>
+  </div>
+  <!-- Toggle dugmad: For You / Explore -->
+  <div class="container mx-auto px-4 mb-8">
+    <div class="flex rounded-lg overflow-hidden w-3/4 mx-auto"> 
+      <button
+        class="flex-1 py-2 text-center font-medium transition-colors"
+        [ngClass]="{'bg-base-200': selectedTab==='foryou', 'bg-base-100': selectedTab!=='foryou'}"
+        (click)="selectedTab='foryou'; loadForYouBlogs()"
+      >
+        For You
+      </button>
+      <button
+        class="flex-1 py-2 text-center font-medium transition-colors"
+        [ngClass]="{'bg-base-200': selectedTab==='explore', 'bg-base-100': selectedTab!=='explore'}"
+        (click)="selectedTab='explore'; loadExploreBlogs()"
+      >
+        Explore
+      </button>
+    </div>
+  </div>
+  <!-- Loader / Error -->
+  <div *ngIf="loading" class="text-gray-500 mb-4">Učitavanje blogova...</div>
+  <!-- <div *ngIf="error" class="text-red-500 mb-4">{{ error }}</div> -->
+
+  <!-- Blog kartice -->
+  <!-- [src]="blog.image_url || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e'" -->
+  <div class="container mx-auto px-4 w-3/4">
+    <div class="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <ng-container *ngFor="let blog of blogs">
+        <a
+          [routerLink]="['/blogs', blog.id]"
+          class="bg-base-200 border border-base-300 flex flex-col h-80 hover:shadow-lg transition"
+        >
+          <figure class="h-40 w-full">
+            <img
+              [src]="'https://theroostingplace.blog/wp-content/uploads/2020/12/qi-bin-w4hbafegiac-unsplash.jpg'"
+              alt="Blog image"
+              class="object-cover w-full h-full"
+            />
+          </figure>
+          <div class="p-4 flex flex-col flex-1">
+            <h3 class="text-lg font-bold mb-2">{{ blog.title }}</h3>
+            <p class="text-sm text-gray-500 line-clamp-3 overflow-hidden">
+              {{ blog.content }}
+            </p>
+            <div class="mt-auto pt-3 text-sm flex items-center justify-between text-gray-400">
+              <span>Autor Ime</span>
+              <span>{{ blog.created_at | date: 'MM.dd.yyyy' }}</span>
+            </div>
+          </div>
+        </a>
+      </ng-container>
+    </div>
+  </div>
+</div>

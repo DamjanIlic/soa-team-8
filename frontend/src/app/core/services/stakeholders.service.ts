@@ -21,6 +21,23 @@ export class StakeholdersService {
     return this.http.get(`${this.apiUrl}/profile`, { headers });
   }
 
+
+    // ================== ADMIN METHODS ==================
+
+  // GET /stakeholders/admin/all
+  getAllUsers(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/admin/all`);
+  }
+
+  // PUT /stakeholders/admin/users/{id}/block
+  blockUser(userId: string): Observable<any> {
+    return this.http.put(`${this.apiUrl}/admin/users/${userId}/block`, {});
+  }
+
+  unblockUser(userId: string): Observable<any> {
+    return this.http.put(`${this.apiUrl}/admin/users/${userId}/unblock`, {});
+  }
+
   updateProfile(profileData: any): Observable<any> {
     const token = localStorage.getItem('access_token');
     if (!token) {
