@@ -97,3 +97,29 @@ func (s *StakeholderService) UpdateProfile(userID string, updates map[string]int
 
 	return s.StakeholderRepo.Update(stakeholder)
 }
+
+func (s *StakeholderService) GetByUserID(userID string) (*model.ProfileResponse, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	stakeholder, err := s.StakeholderRepo.GetByUserID(uid)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.ProfileResponse{
+		ID:           stakeholder.ID.String(),
+		UserID:       stakeholder.UserID.String(), // dodato
+		Username:     stakeholder.User.Username,
+		Email:        stakeholder.User.Email,
+		Role:         string(stakeholder.User.Role),
+		Name:         stakeholder.Name,
+		Surname:      stakeholder.Surname,
+		ProfileImage: stakeholder.ProfileImage,
+		Biography:    stakeholder.Biography,
+		Motto:        stakeholder.Motto,
+		Blocked:      stakeholder.User.Blocked,
+	}, nil
+}

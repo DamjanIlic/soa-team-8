@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package purchase;
+
+option go_package = "./pb";
+
+service PurchaseService {
+  rpc Checkout(CheckoutRequest) returns (CheckoutResponse);
+}
+
+message CheckoutRequest {
+  string user_id = 1;
+}
+
+message CheckoutResponse {
+  repeated TourPurchaseToken tokens = 1;
+  string message = 2;
+}
+
+message TourPurchaseToken {
+  string tour_id = 1;
+  string tourist_id = 2;
+  string token = 3;
+  string created_at = 4;
+}

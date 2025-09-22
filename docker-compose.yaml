@@ -13,6 +13,8 @@ services:
       - blog-service
       - follow-service
       - stakeholders-service
+    networks:
+      - monitoring-net
 
   stakeholders-db:
     image: postgres:15
@@ -30,6 +32,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - monitoring-net
 
   stakeholders-service:
     build:
@@ -48,6 +52,8 @@ services:
     depends_on:
       stakeholders-db:
         condition: service_healthy
+    networks:
+      - monitoring-net
 
   tour-db:
     image: postgres:15
@@ -65,6 +71,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - monitoring-net
 
   tour-service:
     build:
@@ -83,6 +91,8 @@ services:
     depends_on:
       tour-db:
          condition: service_healthy
+    networks:
+      - monitoring-net
 
   blog-db:
     image: mongo:7
@@ -93,6 +103,8 @@ services:
       - "27017:27017"
     volumes:
       - blog-data:/data/db
+    networks:
+      - monitoring-net
 
   blog-service:
     build:
@@ -107,6 +119,8 @@ services:
       - "8080:8080"
     depends_on:
       - blog-db
+    networks:
+      - monitoring-net
 
   follow-service:
     build:
@@ -114,7 +128,7 @@ services:
       dockerfile: Dockerfile
     container_name: follow-service
     ports:
-      - "8081:8080"
+      - "8001:8000"
     environment:
       NEO4J_URI: bolt://neo4j:7687
       NEO4J_USER: neo4j
@@ -123,6 +137,80 @@ services:
       - neo4j
     volumes:
       - ./services/follow/app:/app
+    networks:
+      - monitoring-net
+
+  purchase-db:
+    image: postgres:15
+    container_name: purchase-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: super
+      POSTGRES_DB: purchasedb
+    ports:
+      - "5435:5432"
+    volumes:
+      - purchase-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  purchase-service:
+    build:
+      context: ./services/purchase
+      dockerfile: Dockerfile
+    container_name: purchase-service
+    environment:
+      DB_HOST: purchase-db
+      DB_USER: postgres
+      DB_PASSWORD: super
+      DB_NAME: purchasedb
+      DB_PORT: 5432
+      PORT: 8080
+    ports:
+      - "8087:8080"
+      - "50052:50051"
+    depends_on:
+      purchase-db:
+        condition: service_healthy
+
+  # purchase-db:
+  #   image: postgres:15
+  #   container_name: purchase-db
+  #   environment:
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: super
+  #     POSTGRES_DB: purchasedb
+  #   ports:
+  #     - "5435:5432"
+  #   volumes:
+  #     - purchase-data:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U postgres"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+  # purchase-service:
+  #   build:
+  #     context: ./services/purchase
+  #     dockerfile: Dockerfile
+  #   container_name: purchase-service
+  #   environment:
+  #     DB_HOST: purchase-db
+  #     DB_USER: postgres
+  #     DB_PASSWORD: super
+  #     DB_NAME: purchasedb
+  #     DB_PORT: 5432
+  #     PORT: 8080
+  #   ports:
+  #     - "8087:8080"
+  #     - "50052:50051"
+  #   depends_on:
+  #     purchase-db:
+  #       condition: service_healthy
 
   neo4j:
     image: neo4j:5
@@ -134,6 +222,8 @@ services:
       NEO4J_AUTH: "neo4j/supersecret"
     volumes:
       - neo4j-data:/data
+    networks:
+      - monitoring-net
 
   auth-service:
     build:
@@ -151,6 +241,9 @@ services:
     depends_on:
       stakeholders-db:
         condition: service_healthy
+    networks:
+      - monitoring-net
+
   frontend:
     build:
       context: ./frontend
@@ -158,14 +251,22 @@ services:
     container_name: tourism-frontend
     ports:
       - "4200:4200"
-    # volumes:
-    #   - ./frontend:/app       # mapira lokalni folder za hot reload
+    volumes:
+     - ./frontend:/app
+     - /app/node_modules
     depends_on:
-      - api-gateway           # ili direktno na servis koji treba da zoveš
-  
+      - api-gateway
+    networks:
+     - monitoring-net
 
 volumes:
   stakeholders-data:
   tour-data:
   blog-data:
+  purchase-data:
   neo4j-data:
+
+networks:
+  monitoring-net:
+    external: true
+

@@ -67,6 +67,8 @@ func startServer(handler *handler.StakeholderHandler, userHandler *handler.UserH
 	router := mux.NewRouter().StrictSlash(true)
 
 	api := router.PathPrefix("/api").Subrouter()
+	noAuthAPI := router.PathPrefix("/api").Subrouter()
+	noAuthAPI.HandleFunc("/stakeholders/user/{userId}", handler.GetByUserID).Methods("GET")
 	api.Use(middleware.JWTMiddleware)
 
 	api.HandleFunc("/stakeholders", handler.Create).Methods("POST")
@@ -80,7 +82,7 @@ func startServer(handler *handler.StakeholderHandler, userHandler *handler.UserH
 	api.HandleFunc("/stakeholders/{id}", handler.Get).Methods("GET")
 
 	api.HandleFunc("/stakeholders/admin/users/{id}/block", userHandler.BlockUser).Methods("PUT")
-
+	api.HandleFunc("/stakeholders/admin/users/{id}/unblock", userHandler.UnblockUser).Methods("PUT")
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static")))
 
 	port := getEnv("PORT", "8080")

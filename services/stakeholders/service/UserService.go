@@ -44,3 +44,12 @@ func (s *UserService) BlockUser(userID string) error {
 	return s.UserRepo.Update(user)
 }
 
+func (s *UserService) UnblockUser(userID string) error {
+	user, err := s.UserRepo.FindByID(userID)
+	if err != nil {
+		return err
+	}
+
+	user.Blocked = false
+	return s.UserRepo.Update(user)
+}

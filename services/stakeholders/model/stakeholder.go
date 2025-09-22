@@ -27,6 +27,7 @@ type StakeholderInput struct {
 
 type ProfileResponse struct {
 	ID           string  `json:"id"`
+	UserID       string  `json:"user_id"`
 	Username     string  `json:"username"`
 	Email        string  `json:"email"`
 	Role         string  `json:"role"`
@@ -35,6 +36,7 @@ type ProfileResponse struct {
 	ProfileImage *string `json:"profile_image,omitempty"`
 	Biography    *string `json:"biography,omitempty"`
 	Motto        *string `json:"motto,omitempty"`
+	Blocked      bool    `json:"blocked"`
 }
 
 func (stakeholder *Stakeholder) BeforeCreate(scope *gorm.DB) error {

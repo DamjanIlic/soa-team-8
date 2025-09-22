@@ -14,6 +14,7 @@ type Blog struct {
 	CreatedAt time.Time `json:"created_at" bson:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" bson:"updated_at"`
 	Likes     int       `json:"likes" bson:"likes"`
+	UserID    string    `bson:"user_id"`
 }
 
 func NewBlog(title, content, imageURL string) *Blog {

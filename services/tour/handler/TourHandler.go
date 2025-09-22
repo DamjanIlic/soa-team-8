@@ -7,6 +7,7 @@ import (
 	"tour/model"
 	"tour/service"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
@@ -119,4 +120,36 @@ func (h *TourHandler) ReactivateTour(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(tour)
+}
+func (h *TourHandler) GetTourStatus(w http.ResponseWriter, r *http.Request) {
+	tourIDStr := mux.Vars(r)["id"]
+
+	_, err := uuid.Parse(tourIDStr)
+	if err != nil {
+		http.Error(w, "Invalid tour ID", http.StatusBadRequest)
+		return
+	}
+
+	tourResponse, err := h.TourService.GetTour(tourIDStr)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"status": "not_found"})
+		return
+	}
+
+	var status string
+	switch tourResponse.Status {
+	case "published":
+		status = "available" // moze da se kupi
+	case "archived":
+		status = "archived"
+	case "draft":
+		status = "draft"
+	default:
+		status = "not_available"
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": status})
+
 }

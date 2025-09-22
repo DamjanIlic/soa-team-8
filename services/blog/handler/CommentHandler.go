@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"blog/middleware"
 	"blog/model"
 	"blog/service"
 	"encoding/json"
@@ -17,20 +18,25 @@ type CommentHandler struct {
 func (h *CommentHandler) Create(w http.ResponseWriter, r *http.Request) {
 	blogID := mux.Vars(r)["id"]
 
+	// Uzimamo userID iz context-a koji postavlja JWTMiddleware
+	userID, ok := r.Context().Value(middleware.ContextUserID).(string)
+	if !ok {
+		http.Error(w, "User not found in context", http.StatusUnauthorized)
+		return
+	}
+
 	var input struct {
-		UserID string `json:"user_id"`
-		Text   string `json:"text"`
+		Text string `json:"text"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// Kreiramo novi comment sa string ID-jem
 	comment := &model.Comment{
-		ID:     model.NewComment(input.UserID, blogID, input.Text).ID,
+		ID:     model.NewComment(userID, blogID, input.Text).ID,
 		BlogID: blogID,
-		UserID: input.UserID,
+		UserID: userID,
 		Text:   input.Text,
 	}
 
@@ -52,5 +58,6 @@ func (h *CommentHandler) GetByBlogID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(comments)
 }

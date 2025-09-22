@@ -47,6 +47,7 @@ func (h *StakeholderHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	for _, s := range stakeholders {
 		response = append(response, model.ProfileResponse{
 			ID:           s.ID.String(),
+			UserID:       s.User.ID.String(),
 			Username:     s.User.Username,
 			Email:        s.User.Email,
 			Role:         string(s.User.Role),
@@ -55,6 +56,7 @@ func (h *StakeholderHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 			ProfileImage: s.ProfileImage,
 			Biography:    s.Biography,
 			Motto:        s.Motto,
+			Blocked:      s.User.Blocked, // <-- dodato polje statusa
 		})
 	}
 
@@ -64,7 +66,7 @@ func (h *StakeholderHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 
 func (h *StakeholderHandler) Get(w http.ResponseWriter, r *http.Request) {
 	role := r.Context().Value(middleware.ContextRole).(string)
-	if role != "admin" {
+	if role != "admin" && role != "tourist" && role != "guide" {
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
@@ -107,4 +109,17 @@ func (h *StakeholderHandler) UpdateProfile(w http.ResponseWriter, r *http.Reques
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Profile updated successfully"})
+}
+
+func (h *StakeholderHandler) GetByUserID(w http.ResponseWriter, r *http.Request) {
+	userID := mux.Vars(r)["userId"]
+
+	profile, err := h.StakeholderService.GetByUserID(userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(profile)
 }
