@@ -23,7 +23,7 @@ export class ProfileComponent implements OnInit {
       next: (data) => {
         this.user = data;
         console.log('User data:', this.user); // Debug ceo objekat
-        console.log('Profile image:', this.user.profileImage); // Debug specifično sliku
+        console.log('Profile image:', this.user.profile_image); // Debug specifično sliku
       },
       error: (err) => {
         console.error('Failed to load profile', err);
