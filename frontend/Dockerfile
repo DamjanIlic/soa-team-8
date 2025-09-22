@@ -1,19 +1,15 @@
 FROM node:20-bullseye
 
-# Setujemo radni folder
 WORKDIR /app
 
-# Kopiramo samo package fajlove za caching
 COPY package*.json ./
 
-# Instaliramo dependencies
-RUN npm install
+#Build arg sa default npm install --legacy-peer-deps
+ARG NPM_INSTALL_CMD="npm install --legacy-peer-deps"
+RUN $NPM_INSTALL_CMD
 
-# Kopiramo ostatak projekta
 COPY . .
 
-# Expose Angular dev server port
 EXPOSE 4200
 
-# Pokreni Angular dev server sa live reload i poll da Docker vidi promene fajlova
 CMD ["npx", "ng", "serve", "--host", "0.0.0.0", "--poll=2000"]
