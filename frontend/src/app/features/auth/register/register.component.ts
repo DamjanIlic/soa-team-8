@@ -3,6 +3,8 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { AuthService } from '../../../core/services/auth.service';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { TokenStorage } from '../../../core/interceptors/token.service';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-register',
@@ -18,7 +20,9 @@ export class RegisterComponent {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private tokenStorage: TokenStorage,
+    private http: HttpClient
   ) {
     this.registerForm = this.fb.group({
       username: ['', Validators.required],
@@ -38,7 +42,7 @@ export class RegisterComponent {
 
     this.authService.register(this.registerForm.value).subscribe({
       next: (res) => {
-        localStorage.setItem('token', res.token);
+        this.tokenStorage.saveAccessToken(res.token); 
         this.successMessage = 'The user is registered!';
         this.errorMessage = '';
 
@@ -51,24 +55,15 @@ export class RegisterComponent {
         motto: this.registerForm.value.motto
         };
 
-        fetch('http://localhost:8000/api/stakeholders', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${res.token}`
-          },
-          body: JSON.stringify(stakeholderData)
-        })
-        .then(response => {
-          if (!response.ok) throw new Error('Failed to create stakeholder profile');
-          return response.json();
-        })
-        .then(data => {
-          console.log('Stakeholder profile created:', data);
-        })
-        .catch(err => {
-          console.error('Error creating stakeholder:', err);
-        });
+        this.http.post('http://localhost:8000/api/stakeholders', stakeholderData)
+          .subscribe({
+            next: (data) => {
+              console.log('Stakeholder profile created:', data);
+            },
+            error: (err) => {
+              console.error('Error creating stakeholder:', err);
+            }
+          });
 
         this.registerForm.reset();
         this.router.navigate(['/dashboard']);
