@@ -1,7 +1,9 @@
 package model
 
 import (
+	"errors"
 	"time"
+
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -17,7 +19,7 @@ type KeyPoint struct {
 	Order       int       `json:"order" gorm:"default:0"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
-	
+
 	Tour Tour `json:"-" gorm:"foreignKey:TourID"`
 }
 
@@ -27,7 +29,6 @@ type KeyPointRequest struct {
 	Latitude    float64 `json:"latitude"`
 	Longitude   float64 `json:"longitude"`
 	ImageURL    *string `json:"image_url,omitempty"`
-	Order       int     `json:"order"`
 }
 
 type KeyPointResponse struct {
@@ -45,6 +46,12 @@ type KeyPointResponse struct {
 func (keyPoint *KeyPoint) BeforeCreate(tx *gorm.DB) error {
 	if keyPoint.ID == uuid.Nil {
 		keyPoint.ID = uuid.New()
+	}
+	if keyPoint.Latitude < -90 || keyPoint.Latitude > 90 {
+		return errors.New("latitude must be between -90 and 90")
+	}
+	if keyPoint.Longitude < -180 || keyPoint.Longitude > 180 {
+		return errors.New("longitude must be between -180 and 180")
 	}
 	return nil
 }

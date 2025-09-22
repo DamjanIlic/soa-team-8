@@ -15,22 +15,32 @@ type UserService struct {
 }
 
 // Registracija korisnika
-func (s *UserService) RegisterUser(user *model.User) error {
+func (s *UserService) RegisterUser(user *model.User) (string, error) {
 	if user.Role != model.RoleTourist && user.Role != model.RoleGuide {
-		return errors.New("invalid role")
+		return "", errors.New("invalid role")
 	}
 
 	if _, err := s.UserRepo.FindByEmail(user.Email); err == nil {
-		return errors.New("email already exists")
+		return "", errors.New("email already exists")
 	}
 	if _, err := s.UserRepo.FindByUsername(user.Username); err == nil {
-		return errors.New("username already exists")
+		return "", errors.New("username already exists")
 	}
 
 	hashed, _ := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	user.Password = string(hashed)
 
-	return s.UserRepo.Create(user)
+	if err := s.UserRepo.Create(user); err != nil {
+		return "", err
+	}
+
+	// generisi JWT odmah nakon registracije
+	token, err := util.GenerateJWT(user.ID.String(), string(user.Role))
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
 }
 
 // Login korisnika i vraćanje JWT tokena

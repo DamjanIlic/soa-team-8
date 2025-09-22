@@ -37,6 +37,7 @@ func initDB() *gorm.DB {
 	db.AutoMigrate(&model.Tour{})
 	db.AutoMigrate(&model.KeyPoint{})
 	db.AutoMigrate(&model.Duration{})
+	db.AutoMigrate(&model.Review{})
 
 	return db
 }
@@ -55,6 +56,7 @@ func main() {
 	tourRepo := &repo.TourRepository{DatabaseConnection: db}
 	keyPointRepo := &repo.KeyPointRepository{DatabaseConnection: db}
 	durationRepo := &repo.DurationRepository{DatabaseConnection: db}
+	reviewRepo := &repo.ReviewRepository{DatabaseConnection: db}
 
 	// Servisi
 	tourService := &service.TourService{TourRepo: tourRepo}
@@ -66,16 +68,25 @@ func main() {
 		DurationRepo: durationRepo,
 		TourRepo:     tourRepo,
 	}
+	reviewService := &service.ReviewService{
+		ReviewRepo: reviewRepo,
+	}
 
 	// Handleri
 	tourHandler := &handler.TourHandler{TourService: tourService}
 	keyPointHandler := &handler.KeyPointHandler{KeyPointService: keyPointService}
 	durationHandler := &handler.DurationHandler{DurationService: durationService}
+	reviewHandler := &handler.ReviewHandler{ReviewService: reviewService}
 
-	startServer(tourHandler, keyPointHandler, durationHandler)
+	startServer(tourHandler, keyPointHandler, durationHandler, reviewHandler)
 }
 
-func startServer(tourHandler *handler.TourHandler, keyPointHandler *handler.KeyPointHandler, durationHandler *handler.DurationHandler) {
+func startServer(
+	tourHandler *handler.TourHandler,
+	keyPointHandler *handler.KeyPointHandler,
+	durationHandler *handler.DurationHandler,
+	reviewHandler *handler.ReviewHandler,
+) {
 	router := mux.NewRouter().StrictSlash(true)
 
 	// JWT middleware na svim API rutama
@@ -102,7 +113,11 @@ func startServer(tourHandler *handler.TourHandler, keyPointHandler *handler.KeyP
 	api.HandleFunc("/tours/{tourId}/durations", durationHandler.AddDuration).Methods("POST")
 	api.HandleFunc("/tours/{tourId}/durations", durationHandler.GetDurationsByTour).Methods("GET")
 
-	// Staticki fajlovi
+	// Review endpoints
+	api.HandleFunc("/tours/{tourId}/reviews", reviewHandler.CreateReview).Methods("POST")
+	api.HandleFunc("/tours/{tourId}/reviews", reviewHandler.GetReviewsByTour).Methods("GET")
+
+	// Static files
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static/")))
 
 	port := getEnv("PORT", "8080")

@@ -76,7 +76,8 @@ func RegisterHandler(svc *service.UserService) http.HandlerFunc {
 			Role:     model.Role(req.Role),
 		}
 
-		if err := svc.RegisterUser(user); err != nil {
+		token, err := svc.RegisterUser(user)
+		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -84,6 +85,7 @@ func RegisterHandler(svc *service.UserService) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]string{
 			"message": "registration successful",
+			"token":   token,
 		})
 	}
 }

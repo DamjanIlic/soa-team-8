@@ -21,9 +21,17 @@ func (s *KeyPointService) CreateKeyPoint(tourID string, req *model.KeyPointReque
 
 	// Proveri da li tura postoji
 	tour, err := s.TourRepo.GetByID(tourID)
+
 	if err != nil {
 		return nil, err
 	}
+
+	// uzme max order i postavi +1
+	maxOrder, err := s.KeyPointRepo.GetMaxOrder(tid)
+	if err != nil {
+		return nil, err
+	}
+	nextOrder := maxOrder + 1
 
 	keyPoint := &model.KeyPoint{
 		TourID:      tid,
@@ -32,7 +40,7 @@ func (s *KeyPointService) CreateKeyPoint(tourID string, req *model.KeyPointReque
 		Latitude:    req.Latitude,
 		Longitude:   req.Longitude,
 		ImageURL:    req.ImageURL,
-		Order:       req.Order,
+		Order:       nextOrder,
 	}
 
 	if err := s.KeyPointRepo.Create(keyPoint); err != nil {
