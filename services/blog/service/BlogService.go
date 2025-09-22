@@ -3,7 +3,10 @@ package service
 import (
 	"blog/model"
 	"blog/repo"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"time"
 
 	"github.com/google/uuid"
@@ -89,4 +92,51 @@ func (s *BlogService) Unlike(blogID, userID string) (int, error) {
 
 	count, _ := s.LikeRepo.CountByBlogID(blogID)
 	return int(count), nil
+}
+
+func (s *BlogService) GetForUser(userId string) ([]model.Blog, error) {
+	// 1. Pozovi Follow mikroservis da dobiješ listu userId-eva koje prati
+	url := fmt.Sprintf("http://follow-service:8000/api/follow/following/%s", userId)
+	client := &http.Client{Timeout: 3 * time.Second}
+
+	resp, err := client.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get following: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		body, _ := ioutil.ReadAll(resp.Body)
+		return nil, fmt.Errorf("follow service returned %d: %s", resp.StatusCode, string(body))
+	}
+
+	var followingResp struct {
+		Following []string `json:"following"`
+	}
+	body, _ := ioutil.ReadAll(resp.Body)
+	if err := json.Unmarshal(body, &followingResp); err != nil {
+		return nil, fmt.Errorf("failed to parse follow response: %w", err)
+	}
+
+	// 2. Dohvati sve blogove iz repozitorijuma
+	blogs, err := s.BlogRepo.GetAll()
+	if err != nil {
+		return nil, err
+	}
+
+	// 3. Filtriraj samo blogove autora koje korisnik prati
+	filtered := []model.Blog{}
+	for _, blog := range blogs {
+		for _, followedId := range followingResp.Following {
+			if blog.UserID == followedId {
+				// Dodaj broj lajkova
+				count, _ := s.LikeRepo.CountByBlogID(blog.ID)
+				blog.Likes = int(count)
+				filtered = append(filtered, blog)
+				break
+			}
+		}
+	}
+
+	return filtered, nil
 }

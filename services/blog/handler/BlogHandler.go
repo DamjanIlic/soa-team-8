@@ -102,3 +102,21 @@ func (h *BlogHandler) Unlike(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]int{"likes": count})
 }
+
+func (h *BlogHandler) GetForUser(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	userId := vars["userId"]
+	if userId == "" {
+		http.Error(w, "userId path param required", http.StatusBadRequest)
+		return
+	}
+
+	blogs, err := h.BlogService.GetForUser(userId)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(blogs)
+}

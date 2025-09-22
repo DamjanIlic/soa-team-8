@@ -40,6 +40,30 @@ export class BlogService {
     ).pipe(map(res => res.likes));
   }
 
+    // helper za ekstraktovanje userId iz JWT
+  private getCurrentUserId(): string | null {
+    const token = localStorage.getItem('access_token');
+    if (!token) return null;
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.user_id;
+    } catch (e) {
+      console.error('Invalid token', e);
+      return null;
+    }
+  }
+
+  // Funkcija koja vraća blogove za current usera (onog ko je ulogovan)
+  getForCurrentUser(): Observable<Blog[]> {
+    const userId = this.getCurrentUserId();
+    if (!userId) {
+      throw new Error('No current user ID found in token');
+    }
+
+    return this.http.get<Blog[]>(`http://localhost:8000/api/blogs/user/${userId}`);
+  }
+
   // ================== COMMENT METHODS ==================
 
   getComments(blogId: string): Observable<Comment[]> {

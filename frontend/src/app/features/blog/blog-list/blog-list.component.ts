@@ -14,13 +14,16 @@ import { RouterModule } from '@angular/router';
 })
 export class BlogListComponent implements OnInit {
   blogs: Blog[] = [];
+  blogsForUser: Blog[] = [];
   loading = false;
   error = '';
+  selectedTab: 'foryou' | 'explore' = 'foryou';
 
   constructor(private blogService: BlogService) {}
 
   ngOnInit(): void {
-    this.fetchBlogs();
+    this.loadForYouBlogs();
+    //this.fetchBlogs();
   }
 
   fetchBlogs() {
@@ -37,5 +40,28 @@ export class BlogListComponent implements OnInit {
         this.blogs = data;
         this.loading = false;
       });
+  }
+
+  loadForYouBlogs() {
+    this.selectedTab = 'foryou';
+    this.loading = true;
+    this.blogService.getForCurrentUser() // nova funkcija u blogService
+      .pipe(
+        catchError(err => {
+          this.error = 'Error fetching For You blogs.';
+          console.error(err);
+          return of([]);
+        })
+      )
+      .subscribe(data => {
+        this.blogsForUser = data;
+        this.blogs = this.blogsForUser;
+        this.loading = false;
+      });
+  }
+
+  loadExploreBlogs() {
+    this.selectedTab = 'explore';
+    this.fetchBlogs(); // koristi postojeću getAll funkciju
   }
 }

@@ -8,10 +8,28 @@
       </p>
     </div>
   </div>
-
+  <!-- Toggle dugmad: For You / Explore -->
+  <div class="container mx-auto px-4 mb-8">
+    <div class="flex rounded-lg overflow-hidden w-3/4 mx-auto"> 
+      <button
+        class="flex-1 py-2 text-center font-medium transition-colors"
+        [ngClass]="{'bg-base-200': selectedTab==='foryou', 'bg-base-100': selectedTab!=='foryou'}"
+        (click)="selectedTab='foryou'; loadForYouBlogs()"
+      >
+        For You
+      </button>
+      <button
+        class="flex-1 py-2 text-center font-medium transition-colors"
+        [ngClass]="{'bg-base-200': selectedTab==='explore', 'bg-base-100': selectedTab!=='explore'}"
+        (click)="selectedTab='explore'; loadExploreBlogs()"
+      >
+        Explore
+      </button>
+    </div>
+  </div>
   <!-- Loader / Error -->
   <div *ngIf="loading" class="text-gray-500 mb-4">Učitavanje blogova...</div>
-  <div *ngIf="error" class="text-red-500 mb-4">{{ error }}</div>
+  <!-- <div *ngIf="error" class="text-red-500 mb-4">{{ error }}</div> -->
 
   <!-- Blog kartice -->
   <!-- [src]="blog.image_url || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e'" -->
