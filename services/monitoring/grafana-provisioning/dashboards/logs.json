@@ -1,0 +1,134 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 9,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "d586208d-2be2-4c24-ac06-0dbbb785004c"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": false,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "d586208d-2be2-4c24-ac06-0dbbb785004c"
+          },
+          "editorMode": "builder",
+          "expr": "{service_name=\"auth-service\"} |= ``",
+          "queryType": "range",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "d586208d-2be2-4c24-ac06-0dbbb785004c"
+          },
+          "editorMode": "builder",
+          "expr": "{container=\"auth-service\"} |= ``",
+          "key": "Q-5fc26897-9579-4b7c-a70e-9ff9fd2a4e87-1",
+          "queryType": "range",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "d586208d-2be2-4c24-ac06-0dbbb785004c"
+          },
+          "editorMode": "builder",
+          "expr": "{container=\"blog-service\"} |= ``",
+          "key": "Q-c2d09a37-cb1d-406a-8149-6ca159e57423-2",
+          "queryType": "range",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "d586208d-2be2-4c24-ac06-0dbbb785004c"
+          },
+          "editorMode": "builder",
+          "expr": "{service_name=\"follow-service\"} |= ``",
+          "key": "Q-196c3eda-3ecd-436f-92ea-52f661789fb0-3",
+          "queryType": "range",
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "d586208d-2be2-4c24-ac06-0dbbb785004c"
+          },
+          "editorMode": "builder",
+          "expr": "{service_name=\"tour-service\"} |= ``",
+          "key": "Q-74fc71ae-6ab3-45c9-abd3-5d7a018aedc0-4",
+          "queryType": "range",
+          "refId": "E"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "d586208d-2be2-4c24-ac06-0dbbb785004c"
+          },
+          "editorMode": "builder",
+          "expr": "{service_name=\"tourism-frontend\"} |= ``",
+          "key": "Q-773a33e1-5ad5-438b-af94-3bfe95f18d35-5",
+          "queryType": "range",
+          "refId": "F"
+        }
+      ],
+      "title": "New Panel",
+      "type": "logs"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 38,
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "logs",
+  "uid": "dce82825-e0c5-4609-bfaa-f3f27ab22dbb",
+  "version": 1,
+  "weekStart": ""
+}
