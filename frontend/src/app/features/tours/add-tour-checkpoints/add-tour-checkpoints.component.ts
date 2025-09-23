@@ -19,15 +19,11 @@ import { MapComponent } from '../../../shared/map/map.component';
   ],
   templateUrl: './add-tour-checkpoints.component.html'
 })
-
 export class AddTourCheckpointsComponent implements OnInit {
   tour: Tour | null = null;
   tourId!: string;
   checkpoints: Checkpoint[] = [];
-  checkpointCollection: any[] = [];
-  selectedImage: File | null = null;
-  imagePreview: string | ArrayBuffer | null = null;
-  clearMarkersFlag = false;
+  checkpointCollection: Checkpoint[] = [];
   isHelpModalOpen = false;
 
   @ViewChild('map', { static: false }) mapComponent!: MapComponent;
@@ -35,10 +31,9 @@ export class AddTourCheckpointsComponent implements OnInit {
   checkpointForm = new FormGroup({
     name: new FormControl('', Validators.required),
     description: new FormControl('', Validators.required),
-    secret: new FormControl('', Validators.required),
     latitude: new FormControl('', Validators.required),
     longitude: new FormControl('', Validators.required),
-    image: new FormControl(''),
+    image_url: new FormControl(''), // URL slike
   });
 
   constructor(
@@ -58,28 +53,14 @@ export class AddTourCheckpointsComponent implements OnInit {
     }
   }
 
-  onFileSelect(event: any): void {
-    const file = event.target.files[0];
-    if (file) {
-      this.selectedImage = file;
-      const reader = new FileReader();
-      reader.onload = () => this.imagePreview = reader.result;
-      reader.readAsDataURL(file);
-    }
-  }
-
   addCheckpoint(): void {
+    // Kreiraj payload koji backend očekuje
     const checkpoint: Checkpoint = {
       name: this.checkpointForm.value.name!,
       description: this.checkpointForm.value.description!,
-      secret: this.checkpointForm.value.secret!,
       latitude: Number(this.checkpointForm.value.latitude),
       longitude: Number(this.checkpointForm.value.longitude),
-      image: this.selectedImage ? {
-        data: (this.imagePreview as string).split(',')[1],
-        mimeType: this.selectedImage.type,
-        uploadedAt: new Date().toISOString()
-      } : undefined
+      image_url: this.checkpointForm.value.image_url || undefined
     };
 
     this.checkpoints.push(checkpoint);
@@ -87,16 +68,13 @@ export class AddTourCheckpointsComponent implements OnInit {
     this.resetForm();
   }
 
- onLocationSelected(location: { lat: number; lng: number }) {
-  this.checkpointForm.get('latitude')?.setValue(location.lat.toString());
-  this.checkpointForm.get('longitude')?.setValue(location.lng.toString());
-}
-
+  onLocationSelected(location: { lat: number; lng: number }) {
+    this.checkpointForm.get('latitude')?.setValue(location.lat.toString());
+    this.checkpointForm.get('longitude')?.setValue(location.lng.toString());
+  }
 
   resetForm(): void {
     this.checkpointForm.reset();
-    this.selectedImage = null;
-    this.imagePreview = null;
   }
 
   cancelTour(): void {
@@ -109,6 +87,7 @@ export class AddTourCheckpointsComponent implements OnInit {
       return;
     }
 
+    // Pošalji payload sa URL-om slike
     this.tourService.addKeyPoints(this.tour.id!, this.checkpoints).subscribe({
       next: (res) => {
         console.log('Checkpoints added:', res);

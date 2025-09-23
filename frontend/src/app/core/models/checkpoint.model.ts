@@ -1,15 +1,8 @@
 export interface Checkpoint {
-  id?: string;
-  name: string;
-  description: string;
-  secret: string;
-  latitude: number;
-  longitude: number;
-  image?: Image;
-}
-
-export interface Image {
-  data: string;       // base64 string
-  mimeType: string;   // npr. "image/png"
-  uploadedAt: string; // ISO timestamp
+  id?: string;          // opciono, generiše backend
+  name: string;         // naziv checkpoint-a
+  description: string;  // opis checkpoint-a
+  latitude: number;     // geografska širina
+  longitude: number;    // geografska dužina
+  image_url?: string;   // URL slike, opciono
 }

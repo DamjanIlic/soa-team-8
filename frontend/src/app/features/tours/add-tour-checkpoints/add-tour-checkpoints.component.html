@@ -34,10 +34,10 @@
     </div>
 
     <div>
-      <label class="block font-medium">Image</label>
-      <input type="file" (change)="onFileSelect($event)" accept="image/*" class="block" />
-      <img *ngIf="imagePreview" [src]="imagePreview" class="mt-2 max-h-40 rounded" />
-    </div>
+  <label class="block font-medium">Image URL</label>
+  <input type="text" formControlName="image_url" placeholder="https://example.com/image.jpg" class="w-full border rounded px-2 py-1" />
+</div>
+
 
     <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add Checkpoint</button>
   </form>
