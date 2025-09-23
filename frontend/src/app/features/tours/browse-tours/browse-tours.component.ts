@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TourService, Tour } from '../../../core/services/tour.service';
+import { Component, OnInit } from '@angular/core';
+import { Tour } from '../../../core/models/tour.model';
 import { CartService } from '../../../core/services/cart.service';
 import { PurchaseService } from '../../../core/services/purchase.service';
+import { TourService } from '../../../core/services/tour.service';
 
 @Component({
   selector: 'app-browse-tours',
