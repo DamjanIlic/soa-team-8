@@ -2,17 +2,20 @@
   <h2 class="text-2xl font-bold mb-4">Add Checkpoints</h2>
 
   <!-- MAPA -->
-<div class="mb-4 border rounded h-96 overflow-hidden">
-  <xp-map 
-    [addedCheckpointCollection]="checkpointCollection"
-    (locationSelected)="onLocationSelected($event)"
-    (checkpointRemoved)="handleCheckpointRemoved($event)"
-    class="w-full h-full">
-  </xp-map>
-</div>
+  <div class="mb-4 border rounded h-96 overflow-hidden">
+    <xp-map 
+      [addedCheckpointCollection]="checkpoints"
+      (locationSelected)="onLocationSelected($event)"
+      (checkpointRemoved)="handleCheckpointRemoved($event)"
+      (routeDistanceKm)="onRouteDistanceUpdated($event)"
+      class="w-full h-full">
+    </xp-map>
+  </div>
+
+  <p class="mt-2 text-gray-600">Trenutna dužina ture: {{ tourDistanceKm | number:'1.2-2' }} km</p>
 
   <!-- FORMA -->
-  <form [formGroup]="checkpointForm" (ngSubmit)="addCheckpoint()" class="space-y-4">
+  <form [formGroup]="checkpointForm" class="space-y-4">
     <div>
       <label class="block font-medium">Name</label>
       <input type="text" formControlName="name" class="w-full border rounded px-2 py-1" />
@@ -34,12 +37,13 @@
     </div>
 
     <div>
-  <label class="block font-medium">Image URL</label>
-  <input type="text" formControlName="image_url" placeholder="https://example.com/image.jpg" class="w-full border rounded px-2 py-1" />
-</div>
+      <label class="block font-medium">Image URL</label>
+      <input type="text" formControlName="image_url" placeholder="https://example.com/image.jpg" class="w-full border rounded px-2 py-1" />
+    </div>
 
-
-    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add Checkpoint</button>
+    <button type="button" (click)="addCheckpoint()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+      Add Checkpoint
+    </button>
   </form>
 
   <div class="mt-6">

@@ -72,6 +72,7 @@ func main() {
 	}
 	reviewService := &service.ReviewService{
 		ReviewRepo: reviewRepo,
+		TourRepo:   tourRepo,
 	}
 	tourExecutionService := service.NewTourExecutionService(db)
 	tourExecutionHandler := handler.NewTourExecutionHandler(tourExecutionService)
@@ -125,6 +126,9 @@ func startServer(
 	// Review endpoints
 	api.HandleFunc("/tours/{tourId}/reviews", reviewHandler.CreateReview).Methods("POST")
 	api.HandleFunc("/tours/{tourId}/reviews", reviewHandler.GetReviewsByTour).Methods("GET")
+	api.HandleFunc("/tours/reviews", reviewHandler.GetAllReviews).Methods("GET")
+	api.HandleFunc("/tours/reviews/guide", reviewHandler.GetReviewsForGuide).Methods("GET")
+	api.HandleFunc("/tours/reviews/my", reviewHandler.GetMyReviews).Methods("GET")
 
 	// TourExecution endpoints
 	api.HandleFunc("/tours/executions/start", tourExecutionHandler.StartTour).Methods("POST")

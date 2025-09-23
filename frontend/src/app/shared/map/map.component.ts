@@ -1,8 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { AfterViewInit, Component, EventEmitter, Input, OnChanges, OnDestroy, Output, SimpleChanges } from '@angular/core';
 import * as L from 'leaflet';
-
+import 'leaflet-routing-machine';
 import { Checkpoint } from './map.model';
+
+const MAPBOX_TOKEN = 'pk.eyJ1IjoicHN3Z3J1cGEyIiwiYSI6ImNtMmc5OWlybTAwNHEya3F4emZrMDVoZGsifQ.aD0uouzJcAGE--8As0GFjg';
 
 @Component({
   selector: 'xp-map',
@@ -13,13 +15,13 @@ import { Checkpoint } from './map.model';
 })
 export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
   private map!: L.Map;
-  private markers: L.Layer[] = [];
-  private polyline: L.Polyline | null = null;
+  private markers: L.Marker[] = [];
+  private routingControl: any = null;
 
   @Input() addedCheckpointCollection: Checkpoint[] = [];
-  @Input() clearMarkersTrigger: boolean = false;
-  @Output() locationSelected = new EventEmitter<{ lat: number; lng: number }>();
+  @Output() locationSelected = new EventEmitter<{ lat: number, lng: number }>();
   @Output() checkpointRemoved = new EventEmitter<number>();
+  @Output() routeDistanceKm = new EventEmitter<number>();
 
   ngAfterViewInit(): void {
     this.initMap();
@@ -27,10 +29,7 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['addedCheckpointCollection'] && !changes['addedCheckpointCollection'].firstChange) {
-      this.updateMarkersAndLine();
-    }
-    if (changes['clearMarkersTrigger'] && changes['clearMarkersTrigger'].currentValue) {
-      this.clearMarkers();
+      this.updateMarkersAndRoute();
     }
   }
 
@@ -47,21 +46,24 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
       this.locationSelected.emit({ lat, lng });
     });
 
-    this.updateMarkersAndLine();
+    this.updateMarkersAndRoute();
   }
 
-  private updateMarkersAndLine(): void {
-    this.clearMarkers();
+  private updateMarkersAndRoute(): void {
+    // Ukloni stare markere i rutu
+    this.markers.forEach(m => this.map.removeLayer(m));
+    this.markers = [];
+    if (this.routingControl) {
+      this.map.removeControl(this.routingControl);
+      this.routingControl = null;
+    }
 
     // Dodaj markere
     this.addedCheckpointCollection.forEach((cp, i) => {
-      const marker = L.circleMarker([cp.latitude, cp.longitude], {
-        radius: 8,
-        color: 'red',
-        fillColor: 'red',
-        fillOpacity: 1
-      }).addTo(this.map)
-        .bindPopup(`${cp.name || 'Checkpoint'} <button type="button" data-index="${i}">Remove</button>`);
+      const marker = L.marker([cp.latitude, cp.longitude], { title: cp.name })
+        .addTo(this.map)
+        .bindPopup(`<div style="width:200px"><strong>${cp.name}</strong><br>${cp.description || ''}<br>
+        <button data-index="${i}">Remove</button></div>`);
 
       marker.on('popupopen', () => {
         const btn = document.querySelector(`button[data-index="${i}"]`);
@@ -73,19 +75,26 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
       this.markers.push(marker);
     });
 
-    // Crtaj poliliniju kroz sve checkpoint-e
+    // Dodaj rutu ako ima >=2 checkpointa
     if (this.addedCheckpointCollection.length >= 2) {
-      const latlngs = this.addedCheckpointCollection.map(cp => [cp.latitude, cp.longitude] as [number, number]);
-      this.polyline = L.polyline(latlngs, { color: 'blue' }).addTo(this.map);
-    }
-  }
+      const waypoints = this.addedCheckpointCollection.map(cp => L.latLng(cp.latitude, cp.longitude));
 
-  clearMarkers(): void {
-    this.markers.forEach(m => this.map.removeLayer(m));
-    this.markers = [];
-    if (this.polyline) {
-      this.map.removeLayer(this.polyline);
-      this.polyline = null;
+      this.routingControl = (L as any).Routing.control({
+        waypoints,
+        router: (L as any).Routing.mapbox(MAPBOX_TOKEN, { profile: 'mapbox/driving' }),
+        lineOptions: { styles: [{ color: 'blue', weight: 4 }] },
+        addWaypoints: false,
+        draggableWaypoints: false,
+        fitSelectedRoutes: true,
+        show: false
+      }).addTo(this.map);
+
+      this.routingControl.on('routesfound', (e: any) => {
+        const distanceKm = e.routes[0].summary.totalDistance / 1000;
+        this.routeDistanceKm.emit(distanceKm);
+      });
+    } else {
+      this.routeDistanceKm.emit(0);
     }
   }
 

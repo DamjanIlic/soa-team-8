@@ -19,7 +19,7 @@
           <!-- Admin -->
           <ng-container *ngIf="isLoggedIn && userRole === 'admin'">
             <a routerLink="/admin/users" class="text-gray-700 hover:text-blue-600 px-3 py-2">Users</a>
-            <a routerLink="/reviews" class="text-gray-700 hover:text-blue-600 px-3 py-2">Reviews</a>
+            <!--<a routerLink="/tours/reviews" class="text-gray-700 hover:text-blue-600 px-3 py-2">Reviews</a>-->
           </ng-container>
 
           <!-- Ulogovan korisnik (tourist ili guide) -->
@@ -49,7 +49,7 @@
                 <a routerLink="/tours/browse" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Browse Tours</a>
                 <a routerLink="/tours/my-tours" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Tours</a>
                 <a routerLink="/tours/position-simulator" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Position Simulator</a>
-                <a routerLink="/reviews" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Reviews</a>
+                <a routerLink="/tours/reviews/my" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Reviews</a>
               </div>
             </div>
             <button (click)="cartService.toggleCart()" class="text-gray-700 hover:text-blue-600 px-3 py-2 flex items-center">
@@ -70,7 +70,7 @@
               <div class="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                 <a routerLink="/tours/create" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Create Tour</a>
                 <a routerLink="/tours/author-tours" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Tours</a>
-                <a routerLink="/reviews" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Reviews</a>
+                <a routerLink="/tours/reviews/guide" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Reviews</a>
               </div>
             </div>
           </ng-container>
