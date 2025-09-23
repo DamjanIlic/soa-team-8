@@ -3,11 +3,12 @@ import { Component, OnInit } from '@angular/core';
 import { Tour } from '../../../core/models/tour.model';
 import { PurchaseService } from '../../../core/services/purchase.service';
 import { TourService } from '../../../core/services/tour.service';
+import { ReviewModalComponent } from '../../../shared/components/review-modal/review-modal.component';
 
 @Component({
   selector: 'app-my-tours',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ReviewModalComponent],
   templateUrl: './my-tours.component.html',
   styleUrls: ['./my-tours.component.css']
 })
@@ -15,6 +16,8 @@ export class MyToursComponent implements OnInit {
   purchasedTours: Tour[] = [];
   loading = true;
   error = '';
+  showReviewModal = false;
+  selectedTour: Tour | null = null;
 
   constructor(
     private tourService: TourService,
@@ -59,6 +62,21 @@ export class MyToursComponent implements OnInit {
           this.loading = false;
         }
       });
+  }
+
+  leaveReview(tour: Tour): void {
+    this.selectedTour = tour;
+    this.showReviewModal = true;
+  }
+
+  closeReviewModal(): void {
+    this.showReviewModal = false;
+    this.selectedTour = null;
+  }
+
+  onReviewSubmitted(): void {
+    // Reload tours to update is_reviewed status
+    this.loadPurchasedTours();
   }
 
   formatPrice(price: number): string {

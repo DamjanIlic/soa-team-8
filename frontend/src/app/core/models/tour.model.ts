@@ -11,6 +11,8 @@ export interface Tour {
   durations: Duration[];
   published_at?: string;
   archived_at?: string;
+  is_executed: boolean;
+  is_reviewed: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -38,5 +40,7 @@ export interface TourResponse {
   tags: string;
   status: 'draft' | 'published' | 'archived';
   price: number;
+  is_executed: boolean;
+  is_reviewed: boolean;  
   created_at: string;
 }

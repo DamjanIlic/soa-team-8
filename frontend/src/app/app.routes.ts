@@ -60,7 +60,9 @@ export const routes: Routes = [
   { path: 'tours/position-simulator', component: PositionSimulatorComponent },
   
   // Reviews (jedna komponenta za sve uloge)
-  { path: 'reviews', component: ReviewsComponent },
+  { path: 'tours/reviews', component: ReviewsComponent },           // admin
+  { path: 'tours/reviews/my', component: ReviewsComponent },        // tourist
+  { path: 'tours/reviews/guide', component: ReviewsComponent },     // guide
   
   // Cart
   { path: 'cart', component: ShoppingCartComponent },

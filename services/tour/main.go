@@ -70,6 +70,7 @@ func main() {
 	}
 	reviewService := &service.ReviewService{
 		ReviewRepo: reviewRepo,
+		TourRepo:   tourRepo,
 	}
 
 	// Handleri
@@ -120,6 +121,9 @@ func startServer(
 	// Review endpoints
 	api.HandleFunc("/tours/{tourId}/reviews", reviewHandler.CreateReview).Methods("POST")
 	api.HandleFunc("/tours/{tourId}/reviews", reviewHandler.GetReviewsByTour).Methods("GET")
+	api.HandleFunc("/tours/reviews", reviewHandler.GetAllReviews).Methods("GET")
+	api.HandleFunc("/tours/reviews/guide", reviewHandler.GetReviewsForGuide).Methods("GET")
+	api.HandleFunc("/tours/reviews/my", reviewHandler.GetMyReviews).Methods("GET")
 
 	// Static files
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static/")))

@@ -4,6 +4,8 @@ import (
 	"strings"
 	"time"
 
+	"log"
+
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -69,9 +71,15 @@ func (r *Review) ToResponse() ReviewResponse {
 }
 
 func FromRequest(tourID, touristID string, req *ReviewRequest) (*Review, error) {
+	log.Printf("Parsing date: '%s'", req.VisitedAt)
 	visitedAt, err := time.Parse("2006-01-02", req.VisitedAt)
 	if err != nil {
-		return nil, err
+		// fallback: probaj ISO/RFC3339
+		visitedAt, err = time.Parse(time.RFC3339, req.VisitedAt)
+		if err != nil {
+			log.Printf("Date parsing error: %v", err)
+			return nil, err
+		}
 	}
 	return &Review{
 		TourID:    uuid.MustParse(tourID),
