@@ -34,3 +34,21 @@ func (r *TokenRepository) GetByTourist(touristID uuid.UUID) ([]model.TourPurchas
 func (r *TokenRepository) Delete(id uuid.UUID) error {
 	return r.DB.Delete(&model.TourPurchaseToken{}, "id = ?", id).Error
 }
+
+func (r *TokenRepository) GetByTouristAndTour(touristID, tourID uuid.UUID) (*model.TourPurchaseToken, error) {
+	var token model.TourPurchaseToken
+	err := r.DB.Where("tourist_id = ? AND tour_id = ?", touristID, tourID).First(&token).Error
+	return &token, err
+}
+
+func (r *TokenRepository) MarkAsExecuted(tokenID uuid.UUID) error {
+	return r.DB.Model(&model.TourPurchaseToken{}).
+		Where("id = ?", tokenID).
+		Update("is_executed", true).Error
+}
+
+func (r *TokenRepository) MarkAsReviewed(tokenID uuid.UUID) error {
+	return r.DB.Model(&model.TourPurchaseToken{}).
+		Where("id = ?", tokenID).
+		Update("is_reviewed", true).Error
+}

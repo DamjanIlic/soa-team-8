@@ -51,6 +51,7 @@ import { Tour } from '../../../core/models/tour.model';
               [(ngModel)]="visitDate"
               name="visitDate"
               required
+              [max]="maxDate"
               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -142,8 +143,22 @@ export class ReviewModalComponent {
     this.rating = star;
   }
 
+  get maxDate(): string {
+    return new Date().toISOString().split('T')[0];
+  }
+
   submitReview(): void {
     if (!this.tour || this.rating === 0 || !this.visitDate) {
+      return;
+    }
+
+    // validacija da datum nije u buducnosti
+    const selectedDate = new Date(this.visitDate);
+    const today = new Date();
+    today.setHours(23, 59, 59, 999); // ukljucuje ceo danasnji dan
+    
+    if (selectedDate > today) {
+      alert('Visit date cannot be in the future');
       return;
     }
 

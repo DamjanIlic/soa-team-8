@@ -28,8 +28,6 @@ type Tour struct {
 	Durations   []Duration `json:"durations" gorm:"foreignKey:TourID"`
 	PublishedAt *time.Time `json:"published_at"`
 	ArchivedAt  *time.Time `json:"archived_at"`
-	IsExecuted  bool       `json:"is_executed" gorm:"default:false"`
-	IsReviewed  bool       `json:"is_reviewed" gorm:"default:false"`
 	CreatedAt   time.Time  `json:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at"`
 }
@@ -51,8 +49,6 @@ type TourResponse struct {
 	Tags        string    `json:"tags"`
 	Status      string    `json:"status"`
 	Price       float64   `json:"price"`
-	IsExecuted  bool      `json:"is_executed"`
-	IsReviewed  bool      `json:"is_reviewed"`
 	CreatedAt   time.Time `json:"created_at"`
 }
 

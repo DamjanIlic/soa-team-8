@@ -1,7 +1,6 @@
 package service
 
 import (
-	"errors"
 	"fmt"
 	"tour/model"
 	"tour/repo"
@@ -15,30 +14,12 @@ type ReviewService struct {
 }
 
 func (s *ReviewService) CreateReview(tourID, touristID string, req *model.ReviewRequest) (*model.ReviewResponse, error) {
-	tour, err := s.TourRepo.GetByID(tourID)
-	if err != nil {
-		return nil, errors.New("tour not found")
-	}
-
-	if !tour.IsExecuted {
-		return nil, errors.New("cannot review tour that hasn't been executed")
-	}
-
-	if tour.IsReviewed {
-		return nil, errors.New("tour has already been reviewed")
-	}
-
 	review, err := model.FromRequest(tourID, touristID, req)
 	if err != nil {
 		return nil, err
 	}
 
 	if err := s.ReviewRepo.Create(review); err != nil {
-		return nil, err
-	}
-
-	tour.IsReviewed = true
-	if err := s.TourRepo.Update(tour); err != nil {
 		return nil, err
 	}
 

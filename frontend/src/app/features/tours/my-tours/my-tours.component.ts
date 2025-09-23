@@ -1,9 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { Tour } from '../../../core/models/tour.model';
-import { PurchaseService } from '../../../core/services/purchase.service';
+import { PurchaseService, PurchaseToken } from '../../../core/services/purchase.service';
 import { TourService } from '../../../core/services/tour.service';
 import { ReviewModalComponent } from '../../../shared/components/review-modal/review-modal.component';
+
+export interface TourWithToken {
+  tour: Tour;
+  token: PurchaseToken;
+}
 
 @Component({
   selector: 'app-my-tours',
@@ -13,11 +18,12 @@ import { ReviewModalComponent } from '../../../shared/components/review-modal/re
   styleUrls: ['./my-tours.component.css']
 })
 export class MyToursComponent implements OnInit {
-  purchasedTours: Tour[] = [];
+  purchasedTours: TourWithToken[] = [];
   loading = true;
   error = '';
   showReviewModal = false;
   selectedTour: Tour | null = null;
+  selectedToken: PurchaseToken | null = null;
 
   constructor(
     private tourService: TourService,
@@ -39,14 +45,17 @@ export class MyToursComponent implements OnInit {
             return;
           }
 
-          // Get tour details for each purchased token
           const tourIds = tokens.map(token => token.tour_id);
           this.tourService.getAllTours()
             .subscribe({
               next: (allTours) => {
-                this.purchasedTours = allTours.filter(tour => 
-                  tourIds.includes(tour.id)
-                );
+                this.purchasedTours = tokens.map(token => {
+                  const tour = allTours.find(t => t.id === token.tour_id);
+                  return {
+                    tour: tour!,
+                    token: token
+                  };
+                }).filter(item => item.tour);
                 this.loading = false;
               },
               error: (err) => {
@@ -64,19 +73,31 @@ export class MyToursComponent implements OnInit {
       });
   }
 
-  leaveReview(tour: Tour): void {
-    this.selectedTour = tour;
+  leaveReview(item: TourWithToken): void {
+    this.selectedTour = item.tour;
+    this.selectedToken = item.token;
     this.showReviewModal = true;
   }
 
   closeReviewModal(): void {
     this.showReviewModal = false;
     this.selectedTour = null;
+    this.selectedToken = null;
   }
 
   onReviewSubmitted(): void {
-    // Reload tours to update is_reviewed status
-    this.loadPurchasedTours();
+    if (this.selectedToken) {
+      // Mark token as reviewed
+      this.purchaseService.markTokenAsReviewed(this.selectedToken.id)
+        .subscribe({
+          next: () => {
+            this.loadPurchasedTours();
+          },
+          error: (err) => {
+            console.error('Error marking token as reviewed:', err);
+          }
+        });
+    }
   }
 
   formatPrice(price: number): string {

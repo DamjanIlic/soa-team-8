@@ -135,8 +135,6 @@ func (s *TourService) toTourResponse(tour *model.Tour) *model.TourResponse {
 		Tags:        tour.Tags,
 		Status:      string(tour.Status),
 		Price:       tour.Price,
-		IsExecuted:  tour.IsExecuted,
-		IsReviewed:  tour.IsReviewed,
 		CreatedAt:   tour.CreatedAt,
 	}
 }

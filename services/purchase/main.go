@@ -124,6 +124,10 @@ func startHTTPServer(cartHandler *handler.CartHandler, tokenHandler *handler.Tok
 	// Token endpoints
 	api.HandleFunc("/cart/checkout", tokenHandler.Checkout).Methods("POST")
 	api.HandleFunc("/cart/tokens/purchased", tokenHandler.GetPurchasedTours).Methods("GET")
+	api.HandleFunc("/cart/tokens/purchased", tokenHandler.GetPurchasedTours).Methods("GET")
+	api.HandleFunc("/cart/tokens/{tokenId}/executed", tokenHandler.MarkAsExecuted).Methods("PUT")
+	api.HandleFunc("/cart/tokens/{tokenId}/reviewed", tokenHandler.MarkAsReviewed).Methods("PUT")
+	api.HandleFunc("/cart/tokens/tour/{tourId}", tokenHandler.GetTokenByTouristAndTour).Methods("GET")
 
 	port := getEnv("PORT", "8080")
 	log.Printf("HTTP Purchase service starting on :%s 🚀\n", port)
