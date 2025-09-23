@@ -25,6 +25,8 @@ import { StakeholdersService } from '../../../core/services/stakeholders.service
 export class BlogDetailsComponent implements OnInit {
   blog?: Blog;
   blogId!: string;
+  blogOwnerId?: string;
+
   comments: Comment[] = [];
   user_id = "";
   newCommentText = '';
@@ -45,6 +47,7 @@ export class BlogDetailsComponent implements OnInit {
     const userId = this.getCurrentUserId();
     if (userId){
       this.user_id = userId
+      console.log('ui', this.user_id)
     }
     // this.currentUser = { user_id: userId };
     // console.log(this.currentUser)
@@ -57,6 +60,7 @@ export class BlogDetailsComponent implements OnInit {
       next: (user) => {
         this.currentUser = user; 
         console.log('Current user:', this.currentUser);
+        console.log(this.user_id)
       },
       error: (err) => {
         console.error('Failed to load current user', err);
@@ -78,7 +82,12 @@ export class BlogDetailsComponent implements OnInit {
 
   loadBlog(): void {
     this.blogService.getById(this.blogId).subscribe({
-      next: (data) => this.blog = data,
+      next: (data) => {
+        this.blog = data
+        console.log(this.blog)
+        this.blogOwnerId = data.UserID;
+        console.log('bi', this.blogOwnerId)
+      },
       error: (err) => console.error(err)
     });
   }
@@ -173,6 +182,10 @@ export class BlogDetailsComponent implements OnInit {
     if (userId === 'test') {
       return false;
     }
-    return !!this.followingMap[userId];
+    if (userId === 'testF'){
+      return true;
+    }
+    console.log(this.followingMap)
+    return this.followingMap[userId];
   }
 }

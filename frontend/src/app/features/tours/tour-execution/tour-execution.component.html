@@ -1,0 +1,58 @@
+<div class="p-6 bg-white shadow border border-gray-200 max-w-3xl mx-auto mt-10">
+  <!-- Naslov -->
+  <h2 class="text-3xl font-bold mb-6 text-gray-900 border-b border-gray-300 pb-3">Tour Execution</h2>
+
+  <!-- Status ture -->
+  <div class="mb-6 flex items-center space-x-3">
+    <span class="font-medium text-gray-700 text-lg">Status:</span>
+    <span [ngClass]="{
+      'text-green-600 font-semibold': status==='active',
+      'text-blue-600 font-semibold': status==='completed',
+      'text-red-600 font-semibold': status==='abandoned'
+    }" class="uppercase border-b-2 border-gray-200 pb-1">
+      {{ status }}
+    </span>
+  </div>
+
+  <!-- Trenutna pozicija -->
+  <div class="mb-6 p-4 bg-gray-50 border-t border-b border-gray-200">
+    <h3 class="font-semibold mb-2 text-gray-800 text-lg">Current Position</h3>
+    <div class="flex space-x-8 text-gray-700">
+      <p>Lat: <span class="font-medium">{{ currentLatitude | number:'1.6-6' }}</span></p>
+      <p>Lng: <span class="font-medium">{{ currentLongitude | number:'1.6-6' }}</span></p>
+    </div>
+  </div>
+
+  <!-- Key Points -->
+  <div class="mb-6">
+    <h3 class="font-semibold mb-3 text-gray-800 text-lg border-b border-gray-200 pb-2">Key Points</h3>
+    <ul class="divide-y divide-gray-200">
+      <li *ngFor="let kp of keyPoints" class="flex justify-between items-center py-3 px-2 hover:bg-gray-50 transition">
+        <div class="flex flex-col">
+          <span class="text-gray-900 font-medium">{{ kp.name }}</span>
+          <span class="text-gray-600 text-sm">
+            (Lat: {{ kp.latitude | number:'1.6-6' }}, Lng: {{ kp.longitude | number:'1.6-6' }})
+          </span>
+          <span *ngIf="kp.reachedAt" class="text-gray-500 text-sm mt-0.5">
+            Reached at: {{ kp.reachedAt | date:'shortTime' }}
+          </span>
+        </div>
+        <span [ngClass]="{'text-green-600 font-semibold': kp.reached, 'text-gray-400 font-medium': !kp.reached}">
+          {{ kp.reached ? 'Reached' : 'Pending' }}
+        </span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="flex space-x-3">
+    <button class="bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-2 border border-gray-600 transition"
+            (click)="completeTour()">
+      Complete Tour
+    </button>
+    <button class="bg-red-600 hover:bg-red-700 text-white font-semibold px-5 py-2 border border-gray-600 transition"
+            (click)="abandonTour()">
+      Abandon Tour
+    </button>
+  </div>
+</div>

@@ -75,7 +75,23 @@
     </div>
 
     <!-- Dodavanje novog komentara -->
-    <div class="mt-6">
+     <div 
+      *ngIf="!isFollowing(blogOwnerId || 'test') && blogOwnerId !== user_id" 
+      class="border-l-4 border-blue-600 bg-blue-50 text-blue-800 p-4 mb-6 flex items-center space-x-3"
+      style="border-radius: 0; box-shadow: none;"
+    >
+      <div class="text-sm">
+        Svideo ti se blog? <br>
+        Zaprati autora da bi mogao da komentarises.
+      </div>
+      <button 
+        class="
+        "
+        (click)="followUser(blogOwnerId || 'test')">
+        Zaprati autora
+      </button>
+    </div>
+    <div class="mt-6" *ngIf="isFollowing(blogOwnerId || 'test')">
       <h3 class="text-xl font-semibold mb-2">Dodaj komentar</h3>
       <textarea
         [(ngModel)]="newCommentText"
@@ -84,9 +100,12 @@
         class="w-full p-2 border border-gray-300 rounded mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
       ></textarea>
       <button
-        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        class="px-4 py-2 font-medium rounded 
+              bg-blue-600 text-white 
+              hover:bg-blue-700 
+              disabled:bg-gray-400 disabled:cursor-not-allowed disabled:text-gray-200"
         (click)="addComment()"
-        [disabled]="!newCommentText.trim()"
+        [disabled]="!newCommentText.trim() || !isFollowing(blogOwnerId || 'test')"
       >
         Pošalji
       </button>

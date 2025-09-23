@@ -1,5 +1,6 @@
 export interface Blog {
   id: string;
+  UserID?: string;
   title: string;
   content: string;
   image_url: string;
