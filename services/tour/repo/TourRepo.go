@@ -2,6 +2,7 @@ package repo
 
 import (
 	"tour/model"
+
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -16,21 +17,25 @@ func (r *TourRepository) Create(tour *model.Tour) error {
 
 func (r *TourRepository) GetByID(id string) (*model.Tour, error) {
 	var tour model.Tour
-	
+
 	uid, err := uuid.Parse(id)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := r.DatabaseConnection.First(&tour, "id = ?", uid).Error; err != nil {
+	if err := r.DatabaseConnection.
+		Preload("Checkpoints").
+		Preload("Durations").
+		First(&tour, "id = ?", uid).Error; err != nil {
 		return nil, err
 	}
+
 	return &tour, nil
 }
 
 func (r *TourRepository) GetByAuthorID(authorID uuid.UUID) ([]model.Tour, error) {
 	var tours []model.Tour
-	
+
 	if err := r.DatabaseConnection.Where("author_id = ?", authorID).Find(&tours).Error; err != nil {
 		return nil, err
 	}
@@ -39,10 +44,14 @@ func (r *TourRepository) GetByAuthorID(authorID uuid.UUID) ([]model.Tour, error)
 
 func (r *TourRepository) GetAll() ([]model.Tour, error) {
 	var tours []model.Tour
-	
-	if err := r.DatabaseConnection.Find(&tours).Error; err != nil {
+
+	if err := r.DatabaseConnection.
+		Preload("Checkpoints").
+		Preload("Durations").
+		Find(&tours).Error; err != nil {
 		return nil, err
 	}
+
 	return tours, nil
 }
 
@@ -55,6 +64,10 @@ func (r *TourRepository) Delete(id string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	return r.DatabaseConnection.Delete(&model.Tour{}, "id = ?", uid).Error
+}
+
+func (r *TourRepository) PreloadCheckpointsAndDurations(tour *model.Tour) error {
+	return r.DatabaseConnection.Preload("Checkpoints").Preload("Durations").First(tour, "id = ?", tour.ID).Error
 }

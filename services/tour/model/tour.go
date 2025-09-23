@@ -24,7 +24,8 @@ type Tour struct {
 	Tags        string     `json:"tags"`
 	Status      TourStatus `json:"status" gorm:"default:draft"`
 	Price       float64    `json:"price" gorm:"default:0"`
-	DistanceKm  float64    `json:"distance_km" gorm:"default:0"` // nova polja
+	DistanceKm  float64    `json:"distance_km" gorm:"default:0"`
+	Checkpoints []KeyPoint `json:"checkpoints" gorm:"foreignKey:TourID"`
 	Durations   []Duration `json:"durations" gorm:"foreignKey:TourID"`
 	PublishedAt *time.Time `json:"published_at"`
 	ArchivedAt  *time.Time `json:"archived_at"`
@@ -41,15 +42,18 @@ type TourRequest struct {
 }
 
 type TourResponse struct {
-	ID          string    `json:"id"`
-	AuthorID    string    `json:"author_id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Difficulty  string    `json:"difficulty"`
-	Tags        string    `json:"tags"`
-	Status      string    `json:"status"`
-	Price       float64   `json:"price"`
-	CreatedAt   time.Time `json:"created_at"`
+	ID          string             `json:"id"`
+	AuthorID    string             `json:"author_id"`
+	Name        string             `json:"name"`
+	Description string             `json:"description"`
+	Difficulty  string             `json:"difficulty"`
+	Tags        string             `json:"tags"`
+	Status      string             `json:"status"`
+	Price       float64            `json:"price"`
+	DistanceKm  float64            `json:"distance_km"`
+	Checkpoints []KeyPointResponse `json:"checkpoints"`
+	Durations   []DurationResponse `json:"durations"`
+	CreatedAt   time.Time          `json:"created_at"`
 }
 
 func (tour *Tour) BeforeCreate(tx *gorm.DB) error {

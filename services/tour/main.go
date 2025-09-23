@@ -121,6 +121,11 @@ func startServer(
 	api.HandleFunc("/tours/{tourId}/reviews", reviewHandler.CreateReview).Methods("POST")
 	api.HandleFunc("/tours/{tourId}/reviews", reviewHandler.GetReviewsByTour).Methods("GET")
 
+	// Update tour distance
+	api.HandleFunc("/tours/{id}/distance", tourHandler.UpdateDistance).Methods("PUT")
+
+	api.HandleFunc("/tours/{id}/price", tourHandler.UpdatePrice).Methods("PUT")
+
 	// Static files
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static/")))
 

@@ -73,10 +73,9 @@ func (h *TourHandler) GetToursByAuthor(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(tours)
 }
 
-// Dodajte ovu novu metodu
 func (h *TourHandler) GetAuthorTours(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value(middleware.ContextUserID)
-	if userID == nil {
+	userID, ok := r.Context().Value(middleware.ContextUserID).(string)
+	if !ok || userID == "" {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
@@ -87,20 +86,15 @@ func (h *TourHandler) GetAuthorTours(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	authorID, err := uuid.Parse(userID.(string))
-	if err != nil {
-		http.Error(w, "Invalid user ID", http.StatusBadRequest)
-		return
-	}
-
-	tours, err := h.TourService.GetToursByAuthor(authorID.String())
+	tours, err := h.TourService.GetToursByAuthor(userID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(tours)
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(tours) // i ako je [] frontend dobija 200 + []
 }
 
 func (h *TourHandler) GetAllTours(w http.ResponseWriter, r *http.Request) {
@@ -183,4 +177,62 @@ func (h *TourHandler) GetTourStatus(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": status})
 
+}
+
+func (h *TourHandler) UpdateDistance(w http.ResponseWriter, r *http.Request) {
+	tourID := mux.Vars(r)["id"]
+
+	var payload struct {
+		DistanceKm float64 `json:"distance_km"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	tour, err := h.TourService.UpdateDistance(tourID, payload.DistanceKm)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(tour)
+}
+
+// handler/tour_handler.go
+func (h *TourHandler) UpdatePrice(w http.ResponseWriter, r *http.Request) {
+	tourID := mux.Vars(r)["id"]
+	authorID := r.Context().Value(middleware.ContextUserID).(string)
+
+	// Parse request body
+	var payload struct {
+		Price float64 `json:"price"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if payload.Price <= 0 {
+		http.Error(w, "Price must be greater than 0", http.StatusBadRequest)
+		return
+	}
+
+	// Check author
+	tour, err := h.TourService.GetTour(tourID)
+	if err != nil || tour.AuthorID != authorID {
+		http.Error(w, "Unauthorized or tour not found", http.StatusForbidden)
+		return
+	}
+
+	// Update price
+	updatedTour, err := h.TourService.UpdatePrice(tourID, payload.Price)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(updatedTour)
 }

@@ -21,3 +21,11 @@ type Duration struct {
 	Minutes       int           `json:"minutes"`
 	CreatedAt     time.Time     `json:"created_at"`
 }
+
+type DurationResponse struct {
+	ID            string    `json:"id"`
+	TourID        string    `json:"tour_id"`
+	TransportType string    `json:"transport_type"`
+	Minutes       int       `json:"minutes"`
+	CreatedAt     time.Time `json:"created_at"`
+}

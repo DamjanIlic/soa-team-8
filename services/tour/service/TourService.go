@@ -75,9 +75,29 @@ func (s *TourService) PublishTour(tourID, authorID string) (*model.TourResponse,
 		return nil, err
 	}
 
-	// Provera obaveznih polja
+	// Preload keypoints i durations
+	if err := s.TourRepo.PreloadCheckpointsAndDurations(tour); err != nil {
+		return nil, err
+	}
+
+	// 1. Osnovna polja
 	if tour.Name == "" || tour.Description == "" || tour.Difficulty == "" || tour.Tags == "" {
 		return nil, fmt.Errorf("tour missing required fields")
+	}
+
+	// 2. Cena
+	if tour.Price <= 0 {
+		return nil, fmt.Errorf("tour price must be greater than 0")
+	}
+
+	// 3. Minimum 2 ključne tačke
+	if len(tour.Checkpoints) < 2 {
+		return nil, fmt.Errorf("tour must have at least 2 key points")
+	}
+
+	// 4. Bar jedno trajanje po prevozu
+	if len(tour.Durations) == 0 {
+		return nil, fmt.Errorf("tour must have at least one duration for a transport type")
 	}
 
 	now := time.Now()
@@ -126,6 +146,34 @@ func (s *TourService) ReactivateTour(tourID, authorID string) (*model.TourRespon
 
 // --- HELPERS ---
 func (s *TourService) toTourResponse(tour *model.Tour) *model.TourResponse {
+	// Mapiranje keypoints
+	keypoints := make([]model.KeyPointResponse, len(tour.Checkpoints))
+	for i, kp := range tour.Checkpoints {
+		keypoints[i] = model.KeyPointResponse{
+			ID:          kp.ID.String(),
+			TourID:      kp.TourID.String(),
+			Name:        kp.Name,
+			Description: kp.Description,
+			Latitude:    kp.Latitude,
+			Longitude:   kp.Longitude,
+			ImageURL:    kp.ImageURL,
+			Order:       kp.Order,
+			CreatedAt:   kp.CreatedAt,
+		}
+	}
+
+	// Mapiranje durations
+	durations := make([]model.DurationResponse, len(tour.Durations))
+	for i, d := range tour.Durations {
+		durations[i] = model.DurationResponse{
+			ID:            d.ID.String(),
+			TourID:        d.TourID.String(),
+			TransportType: string(d.TransportType),
+			Minutes:       d.Minutes,
+			CreatedAt:     d.CreatedAt,
+		}
+	}
+
 	return &model.TourResponse{
 		ID:          tour.ID.String(),
 		AuthorID:    tour.AuthorID.String(),
@@ -135,6 +183,9 @@ func (s *TourService) toTourResponse(tour *model.Tour) *model.TourResponse {
 		Tags:        tour.Tags,
 		Status:      string(tour.Status),
 		Price:       tour.Price,
+		DistanceKm:  tour.DistanceKm,
+		Checkpoints: keypoints,
+		Durations:   durations,
 		CreatedAt:   tour.CreatedAt,
 	}
 }
@@ -156,4 +207,28 @@ func (s *TourService) getTourAndCheckAuthor(tourID, authorID string) (*model.Tou
 		return nil, fmt.Errorf("forbidden: you are not the author")
 	}
 	return tour, nil
+}
+
+func (s *TourService) UpdateDistance(tourID string, distance float64) (*model.TourResponse, error) {
+	tour, err := s.TourRepo.GetByID(tourID)
+	if err != nil {
+		return nil, err
+	}
+	tour.DistanceKm = distance
+	if err := s.TourRepo.Update(tour); err != nil {
+		return nil, err
+	}
+	return s.toTourResponse(tour), nil
+}
+
+func (s *TourService) UpdatePrice(tourID string, price float64) (*model.TourResponse, error) {
+	tour, err := s.TourRepo.GetByID(tourID)
+	if err != nil {
+		return nil, err
+	}
+	tour.Price = price
+	if err := s.TourRepo.Update(tour); err != nil {
+		return nil, err
+	}
+	return s.toTourResponse(tour), nil
 }

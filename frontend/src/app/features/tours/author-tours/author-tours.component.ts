@@ -2,8 +2,26 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { jwtDecode } from 'jwt-decode';
-import { Tour } from '../../../core/models/tour.model';
+import { forkJoin } from 'rxjs';
 import { TourService } from '../../../core/services/tour.service';
+
+// import Checkpoint and Duration from the shared model
+import { Checkpoint, Duration } from '../../../core/models/tour.model';
+
+interface Tour {
+  id: string;
+  author_id: string;
+  name: string;
+  description: string;
+  difficulty: string;
+  tags: string;
+  status: 'draft' | 'published' | 'archived';
+  price: number;
+  distance_km?: number;
+  checkpoints?: Checkpoint[];
+  durations?: Duration[];
+  updated_at?: string;
+}
 
 @Component({
   selector: 'app-author-tours',
@@ -16,14 +34,12 @@ export class AuthorToursComponent implements OnInit {
   authorTours: Tour[] = [];
   loading = true;
   error = '';
-
   selectedTour: Tour | null = null;
-  statusOptions: string[] = ['draft', 'published', 'archived'];
   statusLoading = false;
 
   private userId: string = '';
 
-  constructor(private tourService: TourService) {}
+  constructor(private tourService: TourService) { }
 
   ngOnInit(): void {
     this.extractUserIdFromToken();
@@ -33,11 +49,9 @@ export class AuthorToursComponent implements OnInit {
   private extractUserIdFromToken(): void {
     const token = localStorage.getItem('access_token');
     if (!token) return;
-
     try {
       const decoded: any = jwtDecode(token);
       this.userId = decoded.sub || decoded.user_id || '';
-      console.log('Logged-in user ID from JWT:', this.userId);
     } catch (err) {
       console.error('Failed to decode JWT', err);
     }
@@ -47,7 +61,14 @@ export class AuthorToursComponent implements OnInit {
     this.loading = true;
     this.tourService.getAllTours().subscribe({
       next: (allTours) => {
-        this.authorTours = allTours.filter(t => t.author_id === this.userId);
+        this.authorTours = allTours
+          .filter(t => t.author_id === this.userId)
+          .map(t => ({
+            ...t,
+            checkpoints: t.checkpoints ?? [],
+            durations: t.durations ?? [],
+            price: t.price ?? 0
+          }));
         this.loading = false;
       },
       error: (err) => {
@@ -58,70 +79,113 @@ export class AuthorToursComponent implements OnInit {
     });
   }
 
-  // --- Status edit functions ---
-  editTourStatus(tour: Tour): void {
-    this.selectedTour = { ...tour }; // kopija da ne menjaš odmah UI
-  }
+  editTourStatus(tour: Tour): void { this.selectedTour = { ...tour }; }
+  cancelEditStatus(): void { this.selectedTour = null; }
 
-  cancelEditStatus(): void {
-    this.selectedTour = null;
-  }
-
-  saveStatus(): void {
+  saveStatus(newStatus?: 'published' | 'archived' | 'draft'): void {
     if (!this.selectedTour) return;
 
-    this.statusLoading = true;
-    const tourId = this.selectedTour.id;
-    const newStatus = this.selectedTour.status.toLowerCase();
+    const tour = this.selectedTour;
+    const tourId = tour.id;
 
-    let update$;
-    switch (newStatus) {
-      case 'published':
-        update$ = this.tourService.publishTour(tourId);
-        break;
-      case 'archived':
-        update$ = this.tourService.archiveTour(tourId);
-        break;
-      case 'draft':
-        update$ = this.tourService.reactivateTour(tourId);
-        break;
-      default:
-        console.error('Unknown status:', newStatus);
-        this.statusLoading = false;
-        return;
+    if (newStatus === 'draft' && tour.status === 'archived') {
+      tour.status = 'draft';
+      this.selectedTour = { ...tour };
+      return;
     }
 
-    update$.subscribe({
-      next: (updatedTour) => {
-        const index = this.authorTours.findIndex(t => t.id === updatedTour.id);
-        if (index > -1) this.authorTours[index] = updatedTour;
-        this.selectedTour = null;
-        this.statusLoading = false;
+    tour.price = Number(tour.price);
+    if (isNaN(tour.price) || tour.price <= 0) {
+      alert('Price must be greater than 0.');
+      return;
+    }
+
+    if (!tour.name || !tour.description || !tour.difficulty || !tour.tags) {
+      alert('Fill in all required fields: name, description, difficulty, tags.');
+      return;
+    }
+
+    if ((tour.checkpoints?.length ?? 0) < 2) {
+      alert('Add at least 2 checkpoints.');
+      return;
+    }
+
+    this.statusLoading = true;
+
+    this.tourService.updatePrice(tourId, tour.price).subscribe({
+      next: () => {
+        if ((tour.durations?.length ?? 0) === 0 && tour.distance_km) {
+          const speeds: Record<string, number> = { walk: 5, bike: 15, car: 60 };
+          tour.durations = Object.entries(speeds).map(([transport, speed]) => ({
+            transport,
+            duration: Math.ceil(tour.distance_km! / speed)
+          }));
+        }
+
+        const checkpointRequests = (tour.checkpoints ?? []).map(kp =>
+          this.tourService.addKeyPoint(tourId, kp)
+        );
+        const durationRequests = (tour.durations ?? []).map(d =>
+          this.tourService.addDuration(tourId, d)
+        );
+
+        forkJoin([...checkpointRequests, ...durationRequests]).subscribe({
+          next: () => {
+            if (newStatus === 'published') {
+              this.tourService.publishTour(tourId).subscribe({
+                next: () => {
+                  this.loadAuthorTours();
+                  this.selectedTour = null;
+                  this.statusLoading = false;
+                },
+                error: (err) => {
+                  console.error('Failed to publish tour:', err);
+                  alert(err.error || 'Publish failed');
+                  this.statusLoading = false;
+                }
+              });
+            } else if (newStatus === 'archived') {
+              this.tourService.archiveTour(tourId).subscribe({
+                next: () => {
+                  this.loadAuthorTours();
+                  this.selectedTour = null;
+                  this.statusLoading = false;
+                },
+                error: (err) => {
+                  console.error('Failed to archive tour:', err);
+                  alert(err.error || 'Archive failed');
+                  this.statusLoading = false;
+                }
+              });
+            }
+          },
+          error: (err) => {
+            console.error('Failed to save keypoints/durations:', err);
+            alert('Failed to save keypoints or durations before publishing.');
+            this.statusLoading = false;
+          }
+        });
       },
       error: (err) => {
-        console.error('Failed to update status:', err);
-        alert('Failed to update status. Make sure tour meets the requirements.');
+        alert(err.error || 'Failed to set price');
         this.statusLoading = false;
       }
     });
   }
 
-  // --- Helpers ---
-  formatPrice(price: number): string {
-    return `$${price.toFixed(2)}`;
-  }
+  formatPrice(price: number): string { return `$${price.toFixed(2)}`; }
 
   getStatusColor(status: string): string {
     switch (status.toLowerCase()) {
-      case 'published': return 'bg-green-100 text-green-800';
       case 'draft': return 'bg-yellow-100 text-yellow-800';
+      case 'published': return 'bg-green-100 text-green-800';
       case 'archived': return 'bg-gray-100 text-gray-800';
       default: return 'bg-blue-100 text-blue-800';
     }
   }
 
-  getDifficultyColor(difficulty: string): string {
-    switch (difficulty.toLowerCase()) {
+  getDifficultyColor(diff: string): string {
+    switch (diff.toLowerCase()) {
       case 'easy': return 'bg-green-100 text-green-800';
       case 'medium': return 'bg-yellow-100 text-yellow-800';
       case 'hard': return 'bg-red-100 text-red-800';
@@ -129,11 +193,7 @@ export class AuthorToursComponent implements OnInit {
     }
   }
 
-  parseTags(tags: string): string[] {
-    return tags ? tags.split(',').map(tag => tag.trim()) : [];
-  }
+  parseTags(tags: string): string[] { return tags ? tags.split(',').map(t => t.trim()) : []; }
 
-  trackByTourId(index: number, tour: Tour) {
-    return tour.id;
-  }
+  trackByTourId(index: number, tour: Tour) { return tour.id; }
 }
