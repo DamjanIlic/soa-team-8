@@ -33,8 +33,10 @@ func initDB() *gorm.DB {
 		log.Fatal("Failed to connect to database:", err)
 	}
 
+	// Migracije
 	db.AutoMigrate(&model.Tour{})
 	db.AutoMigrate(&model.KeyPoint{})
+	db.AutoMigrate(&model.Duration{})
 	db.AutoMigrate(&model.Review{})
 
 	return db
@@ -50,27 +52,41 @@ func getEnv(key, fallback string) string {
 func main() {
 	db := initDB()
 
+	// Repozitorijumi
 	tourRepo := &repo.TourRepository{DatabaseConnection: db}
 	keyPointRepo := &repo.KeyPointRepository{DatabaseConnection: db}
+	durationRepo := &repo.DurationRepository{DatabaseConnection: db}
 	reviewRepo := &repo.ReviewRepository{DatabaseConnection: db}
 
+	// Servisi
 	tourService := &service.TourService{TourRepo: tourRepo}
 	keyPointService := &service.KeyPointService{
 		KeyPointRepo: keyPointRepo,
+		TourRepo:     tourRepo,
+	}
+	durationService := &service.DurationService{
+		DurationRepo: durationRepo,
 		TourRepo:     tourRepo,
 	}
 	reviewService := &service.ReviewService{
 		ReviewRepo: reviewRepo,
 	}
 
+	// Handleri
 	tourHandler := &handler.TourHandler{TourService: tourService}
 	keyPointHandler := &handler.KeyPointHandler{KeyPointService: keyPointService}
+	durationHandler := &handler.DurationHandler{DurationService: durationService}
 	reviewHandler := &handler.ReviewHandler{ReviewService: reviewService}
 
-	startServer(tourHandler, keyPointHandler, reviewHandler)
+	startServer(tourHandler, keyPointHandler, durationHandler, reviewHandler)
 }
 
-func startServer(tourHandler *handler.TourHandler, keyPointHandler *handler.KeyPointHandler, reviewHandler *handler.ReviewHandler) {
+func startServer(
+	tourHandler *handler.TourHandler,
+	keyPointHandler *handler.KeyPointHandler,
+	durationHandler *handler.DurationHandler,
+	reviewHandler *handler.ReviewHandler,
+) {
 	router := mux.NewRouter().StrictSlash(true)
 
 	// JWT middleware na svim API rutama
@@ -81,7 +97,13 @@ func startServer(tourHandler *handler.TourHandler, keyPointHandler *handler.KeyP
 	api.HandleFunc("/tours", tourHandler.CreateTour).Methods("POST")
 	api.HandleFunc("/tours/{id}", tourHandler.GetTour).Methods("GET")
 	api.HandleFunc("/tours", tourHandler.GetAllTours).Methods("GET")
+
+	api.HandleFunc("/tours/{id}/publish", tourHandler.PublishTour).Methods("POST")
+	api.HandleFunc("/tours/{id}/archive", tourHandler.ArchiveTour).Methods("POST")
+	api.HandleFunc("/tours/{id}/reactivate", tourHandler.ReactivateTour).Methods("POST")
+
 	api.HandleFunc("/tours/author-tours", tourHandler.GetAuthorTours).Methods("GET")
+
 	router.HandleFunc("/api/tours/{id}/status", tourHandler.GetTourStatus).Methods("GET") // interna
 
 	// KeyPoint endpoints
@@ -91,11 +113,15 @@ func startServer(tourHandler *handler.TourHandler, keyPointHandler *handler.KeyP
 	api.HandleFunc("/tours/keypoints/{id}", keyPointHandler.UpdateKeyPoint).Methods("PUT")
 	api.HandleFunc("/tours/keypoints/{id}", keyPointHandler.DeleteKeyPoint).Methods("DELETE")
 
+	// Duration endpoints
+	api.HandleFunc("/tours/{tourId}/durations", durationHandler.AddDuration).Methods("POST")
+	api.HandleFunc("/tours/{tourId}/durations", durationHandler.GetDurationsByTour).Methods("GET")
+
 	// Review endpoints
 	api.HandleFunc("/tours/{tourId}/reviews", reviewHandler.CreateReview).Methods("POST")
 	api.HandleFunc("/tours/{tourId}/reviews", reviewHandler.GetReviewsByTour).Methods("GET")
 
-	// Staticki fajlovi
+	// Static files
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static/")))
 
 	port := getEnv("PORT", "8080")

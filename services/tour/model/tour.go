@@ -2,6 +2,7 @@ package model
 
 import (
 	"time"
+
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -23,6 +24,10 @@ type Tour struct {
 	Tags        string     `json:"tags"`
 	Status      TourStatus `json:"status" gorm:"default:draft"`
 	Price       float64    `json:"price" gorm:"default:0"`
+	DistanceKm  float64    `json:"distance_km" gorm:"default:0"` // nova polja
+	Durations   []Duration `json:"durations" gorm:"foreignKey:TourID"`
+	PublishedAt *time.Time `json:"published_at"`
+	ArchivedAt  *time.Time `json:"archived_at"`
 	CreatedAt   time.Time  `json:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at"`
 }

@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TourService, Tour } from '../../../core/services/tour.service';
+import { Component, OnInit } from '@angular/core';
+import { Tour } from '../../../core/models/tour.model';
+import { TourService } from '../../../core/services/tour.service';
 
 @Component({
   selector: 'app-author-tours',

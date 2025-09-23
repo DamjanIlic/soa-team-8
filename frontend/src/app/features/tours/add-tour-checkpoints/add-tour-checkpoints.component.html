@@ -1,0 +1,62 @@
+<div class="p-4 max-w-3xl mx-auto">
+  <h2 class="text-2xl font-bold mb-4">Add Checkpoints</h2>
+
+  <!-- MAPA -->
+<div class="mb-4 border rounded h-96 overflow-hidden">
+  <xp-map 
+    [addedCheckpointCollection]="checkpointCollection"
+    (locationSelected)="onLocationSelected($event)"
+    (checkpointRemoved)="handleCheckpointRemoved($event)"
+    class="w-full h-full">
+  </xp-map>
+</div>
+
+  <!-- FORMA -->
+  <form [formGroup]="checkpointForm" (ngSubmit)="addCheckpoint()" class="space-y-4">
+    <div>
+      <label class="block font-medium">Name</label>
+      <input type="text" formControlName="name" class="w-full border rounded px-2 py-1" />
+    </div>
+
+    <div>
+      <label class="block font-medium">Description</label>
+      <textarea formControlName="description" class="w-full border rounded px-2 py-1"></textarea>
+    </div>
+
+    <div>
+      <label class="block font-medium">Latitude</label>
+      <input type="number" formControlName="latitude" class="w-full border rounded px-2 py-1" readonly />
+    </div>
+
+    <div>
+      <label class="block font-medium">Longitude</label>
+      <input type="number" formControlName="longitude" class="w-full border rounded px-2 py-1" readonly />
+    </div>
+
+    <div>
+  <label class="block font-medium">Image URL</label>
+  <input type="text" formControlName="image_url" placeholder="https://example.com/image.jpg" class="w-full border rounded px-2 py-1" />
+</div>
+
+
+    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add Checkpoint</button>
+  </form>
+
+  <div class="mt-6">
+    <button (click)="finalizeTour()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+      Finalize Tour
+    </button>
+    <button (click)="cancelTour()" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 ml-2">
+      Cancel
+    </button>
+  </div>
+
+  <div class="mt-6">
+    <h3 class="font-bold text-xl">Added Checkpoints</h3>
+    <ul>
+      <li *ngFor="let c of checkpoints">
+        {{ c.name }} - {{ c.description }} - Lat: {{ c.latitude }}, Lng: {{ c.longitude }}
+      </li>
+    </ul>
+  </div>
+</div>
