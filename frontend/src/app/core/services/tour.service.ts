@@ -49,7 +49,7 @@ export class TourService {
     return this.http.post<TourResponse>(`${this.apiUrl}/${id}/reactivate`, {}, { headers: this.getAuthHeaders() });
   }
 
-  // OVAJ METOD SAD PRIMA SAMO JEDAN checkpoint
+  // Dodavanje jednog keypointa
   addKeyPoint(tourId: string, keyPoint: Checkpoint): Observable<Checkpoint> {
     return this.http.post<Checkpoint>(`${this.apiUrl}/${tourId}/keypoints`, keyPoint, { headers: this.getAuthHeaders() });
   }
@@ -62,4 +62,11 @@ export class TourService {
     return this.http.get<Tour[]>(`${this.apiUrl}/author-tours`, { headers: this.getAuthHeaders() });
   }
 
+  // 🔥 NOVO – update distance
+  updateDistance(tourId: string, distanceKm: number): Observable<Tour> {
+    return this.http.put<Tour>(`${this.apiUrl}/${tourId}/distance`,
+      { distance_km: distanceKm },
+      { headers: this.getAuthHeaders() }
+    );
+  }
 }

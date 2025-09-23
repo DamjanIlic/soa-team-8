@@ -113,8 +113,18 @@ export class AddTourCheckpointsComponent implements OnInit {
       console.error('Tour missing or less than 2 checkpoints');
       return;
     }
-    console.log('Finalizing tour with checkpoints:', this.checkpoints);
-    this.router.navigate(['/tours/author-tours']);
 
+    console.log('Finalizing tour with checkpoints:', this.checkpoints);
+
+    this.tourService.updateDistance(this.tourId, this.tourDistanceKm).subscribe({
+      next: (updatedTour) => {
+        console.log('Tour finalized with distance:', updatedTour);
+        this.router.navigate(['/tours/author-tours']);
+      },
+      error: (err) => {
+        console.error('Failed to finalize tour:', err);
+      }
+    });
   }
+
 }
