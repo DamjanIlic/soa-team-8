@@ -5,12 +5,18 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Checkpoint } from '../../../core/models/checkpoint.model';
 import { Tour } from '../../../core/models/tour.model';
 import { TourService } from '../../../core/services/tour.service';
+
 import { MapComponent } from '../../../shared/map/map.component';
 
 @Component({
   selector: 'xp-add-tour-checkpoints',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterModule,
+    MapComponent
+  ],
   templateUrl: './add-tour-checkpoints.component.html'
 })
 
@@ -81,10 +87,11 @@ export class AddTourCheckpointsComponent implements OnInit {
     this.resetForm();
   }
 
-  onLocationSelected(location: { lat: string; lng: string }) {
-    this.checkpointForm.get('latitude')?.setValue(location.lat);
-    this.checkpointForm.get('longitude')?.setValue(location.lng);
-  }
+ onLocationSelected(location: { lat: number; lng: number }) {
+  this.checkpointForm.get('latitude')?.setValue(location.lat.toString());
+  this.checkpointForm.get('longitude')?.setValue(location.lng.toString());
+}
+
 
   resetForm(): void {
     this.checkpointForm.reset();

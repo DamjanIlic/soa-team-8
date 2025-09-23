@@ -3,6 +3,7 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms'; // <--- OBAVEZNO
 import { Router, RouterModule } from '@angular/router';
 import { TourRequest } from '../../../core/models/tour.model';
+
 import { TourService } from '../../../core/services/tour.service';
 
 @Component({

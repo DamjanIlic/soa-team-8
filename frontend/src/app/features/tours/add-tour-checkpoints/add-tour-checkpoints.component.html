@@ -1,6 +1,17 @@
 <div class="p-4 max-w-3xl mx-auto">
   <h2 class="text-2xl font-bold mb-4">Add Checkpoints</h2>
 
+  <!-- MAPA -->
+<div class="mb-4 border rounded h-96 overflow-hidden">
+  <xp-map 
+    [addedCheckpointCollection]="checkpointCollection"
+    (locationSelected)="onLocationSelected($event)"
+    (checkpointRemoved)="handleCheckpointRemoved($event)"
+    class="w-full h-full">
+  </xp-map>
+</div>
+
+  <!-- FORMA -->
   <form [formGroup]="checkpointForm" (ngSubmit)="addCheckpoint()" class="space-y-4">
     <div>
       <label class="block font-medium">Name</label>
@@ -20,11 +31,6 @@
     <div>
       <label class="block font-medium">Longitude</label>
       <input type="number" formControlName="longitude" class="w-full border rounded px-2 py-1" readonly />
-    </div>
-
-    <div>
-      <label class="block font-medium">Secret</label>
-      <textarea formControlName="secret" class="w-full border rounded px-2 py-1"></textarea>
     </div>
 
     <div>

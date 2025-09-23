@@ -1,18 +1,19 @@
-import { AfterViewInit, Component, EventEmitter, Input, OnDestroy, Output, SimpleChanges } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { AfterViewInit, Component, EventEmitter, Input, OnChanges, OnDestroy, Output, SimpleChanges } from '@angular/core';
 import * as L from 'leaflet';
-import 'leaflet-routing-machine';
-
 import { Checkpoint } from './map.model';
 
 @Component({
   selector: 'xp-map',
+  standalone: true,
+  imports: [CommonModule],
   template: `<div id="map" style="height: 500px;"></div>`,
   styles: ['#map { width: 100%; height: 100%; }']
 })
-export class MapComponent implements AfterViewInit, OnDestroy {
-  map!: L.Map;
+export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
+  private map!: L.Map;
   private markers: L.Marker[] = [];
-  private routingControl: L.Routing.Control | null = null;
+  private polyline: L.Polyline | null = null;
 
   @Input() addedCheckpointCollection: Checkpoint[] = [];
   @Input() clearMarkersTrigger: boolean = false;
@@ -21,6 +22,15 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     this.initMap();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['addedCheckpointCollection'] && !changes['addedCheckpointCollection'].firstChange) {
+      this.updateMarkersAndLine();
+    }
+    if (changes['clearMarkersTrigger'] && changes['clearMarkersTrigger'].currentValue) {
+      this.clearMarkers();
+    }
   }
 
   private initMap(): void {
@@ -34,51 +44,42 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.map.on('click', (e: any) => {
       const { lat, lng } = e.latlng;
       this.locationSelected.emit({ lat, lng });
-      const marker = L.marker([lat, lng]).addTo(this.map);
-      this.markers.push(marker);
     });
 
-    this.addRouteToMap();
+    this.updateMarkersAndLine();
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['addedCheckpointCollection'] && !changes['addedCheckpointCollection'].firstChange) {
-      this.clearMarkers();
-      this.addRouteToMap();
-    }
-    if (changes['clearMarkersTrigger'] && changes['clearMarkersTrigger'].currentValue) {
-      this.clearMarkers();
-    }
-  }
+  private updateMarkersAndLine(): void {
+    this.clearMarkers();
 
-  private addRouteToMap(): void {
-    if (this.addedCheckpointCollection.length < 1) return;
-
-    const waypoints = this.addedCheckpointCollection.map(cp => L.latLng(cp.latitude, cp.longitude));
-
-    waypoints.forEach((latlng, i) => {
-      const marker = L.marker(latlng).addTo(this.map)
-        .bindPopup(`${this.addedCheckpointCollection[i].name} <button type="button" data-index="${i}">Remove</button>`);
+    this.addedCheckpointCollection.forEach((cp, i) => {
+      const marker = L.marker([cp.latitude, cp.longitude]).addTo(this.map)
+        .bindPopup(`${cp.name} <button type="button" data-index="${i}">Remove</button>`);
+      
       marker.on('popupopen', () => {
         const btn = document.querySelector(`button[data-index="${i}"]`);
         if (btn) btn.addEventListener('click', () => {
           this.checkpointRemoved.emit(i);
-          this.map.removeLayer(marker);
+          this.updateMarkersAndLine();
         });
       });
+
       this.markers.push(marker);
     });
 
-    if (waypoints.length >= 2) {
-      const plan = new L.Routing.Plan(waypoints, { draggableWaypoints: false, createMarker: () => false });
-      this.routingControl = L.Routing.control({ plan, routeWhileDragging: false, addWaypoints: false }).addTo(this.map);
+    if (this.addedCheckpointCollection.length >= 2) {
+      const latlngs = this.addedCheckpointCollection.map(cp => [cp.latitude, cp.longitude] as [number, number]);
+      this.polyline = L.polyline(latlngs, { color: 'blue' }).addTo(this.map);
     }
   }
 
   clearMarkers(): void {
     this.markers.forEach(m => this.map.removeLayer(m));
     this.markers = [];
-    if (this.routingControl) { this.map.removeControl(this.routingControl); this.routingControl = null; }
+    if (this.polyline) {
+      this.map.removeLayer(this.polyline);
+      this.polyline = null;
+    }
   }
 
   ngOnDestroy(): void {

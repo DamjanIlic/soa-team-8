@@ -98,13 +98,11 @@ func startServer(
 	api.HandleFunc("/tours/{id}", tourHandler.GetTour).Methods("GET")
 	api.HandleFunc("/tours", tourHandler.GetAllTours).Methods("GET")
 	api.HandleFunc("/tours/authors/{authorId}", tourHandler.GetToursByAuthor).Methods("GET")
-<<<<<<< HEAD
+
 	api.HandleFunc("/tours/{id}/publish", tourHandler.PublishTour).Methods("POST")
 	api.HandleFunc("/tours/{id}/archive", tourHandler.ArchiveTour).Methods("POST")
 	api.HandleFunc("/tours/{id}/reactivate", tourHandler.ReactivateTour).Methods("POST")
-=======
 	router.HandleFunc("/api/tours/{id}/status", tourHandler.GetTourStatus).Methods("GET") // interna
->>>>>>> 04920bf38409d9675659eb9e6dea20ecf75a61ee
 
 	// KeyPoint endpoints
 	api.HandleFunc("/tours/{tourId}/keypoints", keyPointHandler.CreateKeyPoint).Methods("POST")
