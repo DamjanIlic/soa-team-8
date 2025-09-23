@@ -1,18 +1,19 @@
 import { CommonModule } from '@angular/common';
 import { AfterViewInit, Component, EventEmitter, Input, OnChanges, OnDestroy, Output, SimpleChanges } from '@angular/core';
 import * as L from 'leaflet';
+
 import { Checkpoint } from './map.model';
 
 @Component({
   selector: 'xp-map',
   standalone: true,
   imports: [CommonModule],
-  template: `<div id="map" style="height: 500px;"></div>`,
+  template: `<div id="map" style="height: 100%; width: 100%; border: 1px solid #ccc;"></div>`,
   styles: ['#map { width: 100%; height: 100%; }']
 })
 export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
   private map!: L.Map;
-  private markers: L.Marker[] = [];
+  private markers: L.Layer[] = [];
   private polyline: L.Polyline | null = null;
 
   @Input() addedCheckpointCollection: Checkpoint[] = [];
@@ -52,21 +53,27 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
   private updateMarkersAndLine(): void {
     this.clearMarkers();
 
+    // Dodaj markere
     this.addedCheckpointCollection.forEach((cp, i) => {
-      const marker = L.marker([cp.latitude, cp.longitude]).addTo(this.map)
-        .bindPopup(`${cp.name} <button type="button" data-index="${i}">Remove</button>`);
-      
+      const marker = L.circleMarker([cp.latitude, cp.longitude], {
+        radius: 8,
+        color: 'red',
+        fillColor: 'red',
+        fillOpacity: 1
+      }).addTo(this.map)
+        .bindPopup(`${cp.name || 'Checkpoint'} <button type="button" data-index="${i}">Remove</button>`);
+
       marker.on('popupopen', () => {
         const btn = document.querySelector(`button[data-index="${i}"]`);
         if (btn) btn.addEventListener('click', () => {
           this.checkpointRemoved.emit(i);
-          this.updateMarkersAndLine();
         });
       });
 
       this.markers.push(marker);
     });
 
+    // Crtaj poliliniju kroz sve checkpoint-e
     if (this.addedCheckpointCollection.length >= 2) {
       const latlngs = this.addedCheckpointCollection.map(cp => [cp.latitude, cp.longitude] as [number, number]);
       this.polyline = L.polyline(latlngs, { color: 'blue' }).addTo(this.map);
