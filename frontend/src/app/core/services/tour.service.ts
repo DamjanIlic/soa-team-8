@@ -4,19 +4,6 @@ import { Observable } from 'rxjs';
 import { Checkpoint } from '../models/checkpoint.model';
 import { Tour, TourRequest, TourResponse } from '../models/tour.model';
 
-/*
-export interface Tour {
-  id: string;
-  author_id: string;
-  name: string;
-  description: string;
-  difficulty: string;
-  tags: string;
-  status: string;
-  price: number;
-}*/
-
-
 @Injectable({
   providedIn: 'root'
 })
@@ -24,7 +11,7 @@ export class TourService {
 
   private apiUrl = 'http://localhost:8000/api/tours';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   private getAuthHeaders(): HttpHeaders {
     const token = localStorage.getItem('access_token');
@@ -62,15 +49,17 @@ export class TourService {
     return this.http.post<TourResponse>(`${this.apiUrl}/${id}/reactivate`, {}, { headers: this.getAuthHeaders() });
   }
 
-  addKeyPoints(tourId: string, keyPoints: Checkpoint[]): Observable<Checkpoint[]> {
-    return this.http.post<Checkpoint[]>(`${this.apiUrl}/${tourId}/keypoints`, keyPoints, { headers: this.getAuthHeaders() });
+  // OVAJ METOD SAD PRIMA SAMO JEDAN checkpoint
+  addKeyPoint(tourId: string, keyPoint: Checkpoint): Observable<Checkpoint> {
+    return this.http.post<Checkpoint>(`${this.apiUrl}/${tourId}/keypoints`, keyPoint, { headers: this.getAuthHeaders() });
   }
 
   getKeyPointsByTour(tourId: string): Observable<Checkpoint[]> {
     return this.http.get<Checkpoint[]>(`${this.apiUrl}/${tourId}/keypoints`, { headers: this.getAuthHeaders() });
   }
-  getAuthorTours(): Observable<Tour[]> {
-    return this.http.get<Tour[]>(`${this.apiUrl}/tours/author-tours`);
-  }
-}
 
+  getAuthorTours(): Observable<Tour[]> {
+    return this.http.get<Tour[]>(`${this.apiUrl}/author-tours`, { headers: this.getAuthHeaders() });
+  }
+
+}

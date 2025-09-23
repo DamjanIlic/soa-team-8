@@ -38,5 +38,11 @@ export interface TourResponse {
   tags: string;
   status: 'draft' | 'published' | 'archived';
   price: number;
+  distance_km: number;
+  durations: Duration[];
   created_at: string;
+  updated_at: string;
+  published_at?: string;
+  archived_at?: string;
 }
+
