@@ -68,6 +68,36 @@ import { Tour } from '../../../core/models/tour.model';
             ></textarea>
           </div>
 
+          <!-- Images -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Images (URLs)</label>
+            <div class="space-y-2">
+              <input
+                *ngFor="let url of imageUrls; let i = index; trackBy: trackByIndex"
+                type="url"
+                [(ngModel)]="imageUrls[i]"
+                [name]="'imageUrl' + i"
+                placeholder="https://example.com/image.jpg"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div class="flex space-x-2 mt-2">
+              <button
+                type="button"
+                (click)="addImageUrl()"
+                class="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded-md">
+                + Add Image URL
+              </button>
+              <button
+                *ngIf="imageUrls.length > 1"
+                type="button"
+                (click)="removeLastImageUrl()"
+                class="px-3 py-1 text-sm bg-red-200 hover:bg-red-300 rounded-md">
+                Remove Last
+              </button>
+            </div>
+          </div>
+
           <!-- Submit Buttons -->
           <div class="flex justify-end space-x-2">
             <button
@@ -103,6 +133,7 @@ export class ReviewModalComponent {
   rating = 0;
   comment = '';
   visitDate = '';
+  imageUrls: string[] = [''];
   loading = false;
 
   constructor(private reviewService: ReviewService) {}
@@ -118,11 +149,14 @@ export class ReviewModalComponent {
 
     this.loading = true;
 
+    //filter out empty urls
+    const validImageUrls = this.imageUrls.filter(url => url.trim() !== '');
+
     const reviewRequest: ReviewRequest = {
       rating: this.rating,
       comment: this.comment,
       visited_at: this.visitDate,
-      images: []
+      images: validImageUrls
     };
 
     this.reviewService.createReview(this.tour.id, reviewRequest).subscribe({
@@ -145,4 +179,19 @@ export class ReviewModalComponent {
     this.comment = '';
     this.visitDate = '';
   }
+
+  addImageUrl(): void {
+    this.imageUrls.push('');
+  }
+
+  removeLastImageUrl(): void {
+    if (this.imageUrls.length > 1) {
+      this.imageUrls.pop();
+    }
+  }
+
+  trackByIndex(index: number): number {
+    return index;
+  }
+
 }

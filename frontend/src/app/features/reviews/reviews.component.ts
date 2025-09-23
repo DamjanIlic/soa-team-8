@@ -42,6 +42,16 @@ import { ReviewService, Review } from '../../core/services/review.service';
             <span class="text-sm text-gray-500">{{ formatDate(review.created_at) }}</span>
           </div>
           <p class="text-gray-600 mb-2">{{ review.comment }}</p>
+          <div *ngIf="review.images && review.images.length > 0" class="mt-3">
+            <div class="grid grid-cols-2 gap-2 max-w-md">
+              <img
+                *ngFor="let imageUrl of review.images"
+                [src]="imageUrl"
+                [alt]="'Review image'"
+                (error)="onImageError($event)"
+                class="w-full h-20 object-cover rounded-md border hover:scale-105 transition-transform cursor-pointer">
+            </div>
+          </div>
           <div class="text-sm text-gray-500">
             Visited: {{ formatDate(review.visited_at) }}
           </div>
@@ -120,5 +130,9 @@ export class ReviewsComponent implements OnInit {
 
   formatDate(dateString: string): string {
     return new Date(dateString).toLocaleDateString();
+  }
+
+  onImageError(event: any): void {
+    event.target.style.display = 'none';
   }
 }
