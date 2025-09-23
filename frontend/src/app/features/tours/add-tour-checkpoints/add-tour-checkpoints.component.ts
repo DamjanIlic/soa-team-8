@@ -67,7 +67,8 @@ export class AddTourCheckpointsComponent implements OnInit {
     this.tourService.addKeyPoint(this.tourId, checkpoint).subscribe({
       next: (savedCheckpoint) => {
         console.log('Checkpoint successfully added to DB:', savedCheckpoint);
-        this.checkpoints.push(savedCheckpoint);
+        this.checkpoints = [...this.checkpoints, savedCheckpoint];
+
         this.resetForm();
         this.saving = false;
       },
@@ -113,6 +114,7 @@ export class AddTourCheckpointsComponent implements OnInit {
       return;
     }
     console.log('Finalizing tour with checkpoints:', this.checkpoints);
-    this.router.navigate(['/author-tours']);
+    this.router.navigate(['/tours/author-tours']);
+
   }
 }

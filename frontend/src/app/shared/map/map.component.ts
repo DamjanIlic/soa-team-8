@@ -4,23 +4,7 @@ import * as L from 'leaflet';
 import 'leaflet-routing-machine';
 import { Checkpoint } from './map.model';
 
-// TypeScript deklaracije za L.Routing
-declare module 'leaflet' {
-  namespace Routing {
-    class Control extends L.Control {
-      constructor(options?: any);
-      on(type: string, fn: (e: any) => void): this;
-      getPlan(): any;
-      setWaypoints(waypoints: L.LatLng[]): void;
-    }
-    function control(options?: any): Control;
-    function osrmv1(options?: any): any;
-  }
-
-  interface Map {
-    routingControl?: Routing.Control;
-  }
-}
+const MAPBOX_TOKEN = 'pk.eyJ1IjoicHN3Z3J1cGEyIiwiYSI6ImNtMmc5OWlybTAwNHEya3F4emZrMDVoZGsifQ.aD0uouzJcAGE--8As0GFjg';
 
 @Component({
   selector: 'xp-map',
@@ -31,12 +15,11 @@ declare module 'leaflet' {
 })
 export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
   private map!: L.Map;
-  private markers: L.Layer[] = [];
-  private routingControl: L.Routing.Control | null = null;
+  private markers: L.Marker[] = [];
+  private routingControl: any = null;
 
   @Input() addedCheckpointCollection: Checkpoint[] = [];
-  @Input() clearMarkersTrigger: boolean = false;
-  @Output() locationSelected = new EventEmitter<{ lat: number; lng: number }>();
+  @Output() locationSelected = new EventEmitter<{ lat: number, lng: number }>();
   @Output() checkpointRemoved = new EventEmitter<number>();
   @Output() routeDistanceKm = new EventEmitter<number>();
 
@@ -47,9 +30,6 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['addedCheckpointCollection'] && !changes['addedCheckpointCollection'].firstChange) {
       this.updateMarkersAndRoute();
-    }
-    if (changes['clearMarkersTrigger'] && changes['clearMarkersTrigger'].currentValue) {
-      this.clearMarkers();
     }
   }
 
@@ -70,17 +50,20 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   private updateMarkersAndRoute(): void {
-    this.clearMarkers();
+    // Ukloni stare markere i rutu
+    this.markers.forEach(m => this.map.removeLayer(m));
+    this.markers = [];
+    if (this.routingControl) {
+      this.map.removeControl(this.routingControl);
+      this.routingControl = null;
+    }
 
     // Dodaj markere
     this.addedCheckpointCollection.forEach((cp, i) => {
-      const marker = L.circleMarker([cp.latitude, cp.longitude], {
-        radius: 8,
-        color: 'red',
-        fillColor: 'red',
-        fillOpacity: 1
-      }).addTo(this.map)
-        .bindPopup(`${cp.name || 'Checkpoint'} <button type="button" data-index="${i}">Remove</button>`);
+      const marker = L.marker([cp.latitude, cp.longitude], { title: cp.name })
+        .addTo(this.map)
+        .bindPopup(`<div style="width:200px"><strong>${cp.name}</strong><br>${cp.description || ''}<br>
+        <button data-index="${i}">Remove</button></div>`);
 
       marker.on('popupopen', () => {
         const btn = document.querySelector(`button[data-index="${i}"]`);
@@ -92,15 +75,13 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
       this.markers.push(marker);
     });
 
-    // Crtaj rutu ako ima >= 2 checkpoint-a
+    // Dodaj rutu ako ima >=2 checkpointa
     if (this.addedCheckpointCollection.length >= 2) {
       const waypoints = this.addedCheckpointCollection.map(cp => L.latLng(cp.latitude, cp.longitude));
 
-      if (this.routingControl) this.map.removeControl(this.routingControl);
-
-      this.routingControl = L.Routing.control({
+      this.routingControl = (L as any).Routing.control({
         waypoints,
-        router: (L.Routing as any).osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1' }),
+        router: (L as any).Routing.mapbox(MAPBOX_TOKEN, { profile: 'mapbox/driving' }),
         lineOptions: { styles: [{ color: 'blue', weight: 4 }] },
         addWaypoints: false,
         draggableWaypoints: false,
@@ -109,21 +90,11 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
       }).addTo(this.map);
 
       this.routingControl.on('routesfound', (e: any) => {
-        const route = e.routes[0];
-        const distanceKm = route.summary.totalDistance / 1000;
+        const distanceKm = e.routes[0].summary.totalDistance / 1000;
         this.routeDistanceKm.emit(distanceKm);
       });
     } else {
       this.routeDistanceKm.emit(0);
-    }
-  }
-
-  clearMarkers(): void {
-    this.markers.forEach(m => this.map.removeLayer(m));
-    this.markers = [];
-    if (this.routingControl) {
-      this.map.removeControl(this.routingControl);
-      this.routingControl = null;
     }
   }
 
