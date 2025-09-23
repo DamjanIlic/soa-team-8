@@ -53,8 +53,8 @@
               {{ blog.content }}
             </p>
             <div class="mt-auto pt-3 text-sm flex items-center justify-between text-gray-400">
-              <span>Autor Ime</span>
-              <span>{{ blog.created_at | date: 'MM.dd.yyyy' }}</span>
+              <span>Autor: {{blog.username}}</span>
+              <span>Napravljen: {{ blog.created_at | date: 'MM.dd.yyyy' }}</span>
             </div>
           </div>
         </a>

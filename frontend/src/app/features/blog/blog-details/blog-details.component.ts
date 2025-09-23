@@ -85,7 +85,7 @@ export class BlogDetailsComponent implements OnInit {
       next: (data) => {
         this.blog = data
         console.log(this.blog)
-        this.blogOwnerId = data.UserID;
+        this.blogOwnerId = data.user_id;
         console.log('bi', this.blogOwnerId)
       },
       error: (err) => console.error(err)
