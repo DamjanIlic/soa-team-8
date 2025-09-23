@@ -52,7 +52,12 @@
                 <a routerLink="/reviews" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Reviews</a>
               </div>
             </div>
-            <a routerLink="/cart" class="text-gray-700 hover:text-blue-600 px-3 py-2">Shopping Cart</a>
+            <button (click)="cartService.toggleCart()" class="text-gray-700 hover:text-blue-600 px-3 py-2 flex items-center">
+              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m-2.4 0L5 3M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17M17 13v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"></path>
+              </svg>
+              Shopping Cart
+            </button>
           </ng-container>
 
           <!-- Guide specific -->
@@ -64,7 +69,7 @@
               </button>
               <div class="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                 <a routerLink="/tours/create" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Create Tour</a>
-                <a routerLink="/tours/my-tours" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Tours</a>
+                <a routerLink="/tours/author-tours" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Tours</a>
                 <a routerLink="/reviews" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Reviews</a>
               </div>
             </div>

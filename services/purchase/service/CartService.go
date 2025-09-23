@@ -46,6 +46,13 @@ func (s *CartService) AddItemToUserCart(touristID uuid.UUID, tourID uuid.UUID, n
 		}
 	}
 
+	// da li je tura vec u korpi
+	for _, existingItem := range cart.Items {
+		if existingItem.TourID == tourID {
+			return nil, errors.New("tour already in cart")
+		}
+	}
+
 	// sada dodaj item u korpu
 	item := &model.OrderItem{
 		CartID: cart.ID,
