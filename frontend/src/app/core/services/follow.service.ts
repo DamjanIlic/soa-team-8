@@ -18,7 +18,7 @@ export class FollowService {
   constructor(private http: HttpClient) {}
 
   // helper za ekstraktovanje userId iz JWT-a
-  getCurrentUserId(): string | null {
+  private getCurrentUserId(): string | null {
     const token = localStorage.getItem('access_token'); // gde čuvaš JWT
     if (!token) return null;
 

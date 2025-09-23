@@ -93,7 +93,11 @@
             class="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200">
             Leave Review
           </button>
-          
+        <a 
+          href="/tours/tour-execution/{{tour.id}}" 
+          class="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 inline-block text-center">
+          Start Tour
+        </a>
           <!-- Already Reviewed - za reviewed ture -->
           <div *ngIf="item.token.is_executed && item.token.is_reviewed" 
                class="flex-1 bg-gray-400 text-white px-4 py-2 rounded-lg text-sm font-medium text-center">

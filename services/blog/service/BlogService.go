@@ -27,22 +27,50 @@ func (s *BlogService) Create(blog *model.Blog) error {
 }
 
 // Dohvatanje svih blogova sa ažuriranim brojem lajkova
-func (s *BlogService) GetAll() ([]model.Blog, error) {
+func (s *BlogService) GetAll() ([]model.BlogResponse, error) {
 	blogs, err := s.BlogRepo.GetAll()
 	if err != nil {
 		return nil, err
 	}
 
-	for i := range blogs {
-		count, _ := s.LikeRepo.CountByBlogID(blogs[i].ID)
-		blogs[i].Likes = int(count)
+	response := []model.BlogResponse{}
+	userCache := make(map[string]string) // keš userID -> username
+
+	for _, b := range blogs {
+		// Dohvati username iz Stakeholders servisa
+		username, ok := userCache[b.UserID]
+		if !ok {
+			user, err := GetUserFromStakeholders(b.UserID)
+			if err != nil || user == nil {
+				username = "Nepoznat"
+			} else {
+				username = user.Username
+			}
+			userCache[b.UserID] = username
+		}
+
+		// Dodaj broj lajkova
+		count, _ := s.LikeRepo.CountByBlogID(b.ID)
+		b.Likes = int(count)
+
+		response = append(response, model.BlogResponse{
+			ID:        b.ID,
+			Title:     b.Title,
+			Content:   b.Content,
+			UserID:    b.UserID,
+			Username:  username,
+			Likes:     b.Likes,
+			ImageURL:  b.ImageURL,
+			CreatedAt: b.CreatedAt,
+			UpdatedAt: b.UpdatedAt,
+		})
 	}
 
-	return blogs, nil
+	return response, nil
 }
 
 // Dohvatanje bloga po ID-u sa ažuriranim brojem lajkova
-func (s *BlogService) Get(id string) (*model.Blog, error) {
+func (s *BlogService) Get(id string) (*model.BlogResponse, error) {
 	blog, err := s.BlogRepo.Get(id)
 	if err != nil {
 		return nil, err
@@ -51,7 +79,26 @@ func (s *BlogService) Get(id string) (*model.Blog, error) {
 	count, _ := s.LikeRepo.CountByBlogID(id)
 	blog.Likes = int(count)
 
-	return blog, nil
+	// Dohvati username autora iz Stakeholders servisa
+	user, err := GetUserFromStakeholders(blog.UserID)
+	username := "Nepoznat"
+	if err == nil && user != nil {
+		username = user.Username
+	}
+
+	resp := &model.BlogResponse{
+		ID:        blog.ID,
+		Title:     blog.Title,
+		Content:   blog.Content,
+		UserID:    blog.UserID,
+		Username:  username,
+		CreatedAt: blog.CreatedAt,
+		UpdatedAt: blog.UpdatedAt,
+		Likes:     blog.Likes,
+		ImageURL:  blog.ImageURL,
+	}
+
+	return resp, nil
 }
 
 func (s *BlogService) Like(blogID, userID string) (int, error) {

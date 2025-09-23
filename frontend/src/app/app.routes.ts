@@ -21,6 +21,7 @@ import { ReviewsComponent } from './features/reviews/reviews.component';
 
 import { ShoppingCartComponent } from './features/cart/shopping-cart.component';
 import { BrowseToursComponent } from './features/tours/browse-tours/browse-tours.component';
+import { TourExecutionComponent } from './features/tours/tour-execution/tour-execution.component';
 
 export const routes: Routes = [
   // Auth routes
@@ -58,7 +59,7 @@ export const routes: Routes = [
   { path: 'tours/my-tours', component: MyToursComponent },
   { path: 'tours/author-tours', component: AuthorToursComponent },
   { path: 'tours/position-simulator', component: PositionSimulatorComponent },
-  
+  { path: 'tours/tour-execution/:id', component: TourExecutionComponent},
   // Reviews (jedna komponenta za sve uloge)
   { path: 'tours/reviews', component: ReviewsComponent },           // admin
   { path: 'tours/reviews/my', component: ReviewsComponent },        // tourist
