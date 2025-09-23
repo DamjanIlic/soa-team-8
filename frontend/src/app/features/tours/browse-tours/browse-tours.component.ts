@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TourService } from '../../../core/services/tour.service';
-import { Tour } from '../../../core/services/tour.service';
+import { TourService, Tour } from '../../../core/services/tour.service';
+import { CartService } from '../../../core/services/cart.service';
+import { PurchaseService } from '../../../core/services/purchase.service';
 
 @Component({
   selector: 'app-browse-tours',
@@ -12,13 +13,20 @@ import { Tour } from '../../../core/services/tour.service';
 })
 export class BrowseToursComponent implements OnInit {
   tours: Tour[] = [];
+  publishedTours: Tour[] = [];
+  purchasedTourIds: string[] = [];
   loading = true;
   error = '';
 
-  constructor(private tourService: TourService) {}
+  constructor(
+    private tourService: TourService,
+    private cartService: CartService,
+    private purchaseService: PurchaseService
+  ) {}
 
   ngOnInit(): void {
     this.loadTours();
+    this.loadPurchasedTours();
   }
 
   loadTours(): void {
@@ -27,12 +35,52 @@ export class BrowseToursComponent implements OnInit {
       .subscribe({
         next: (data) => {
           this.tours = data;
+          this.filterAvailableTours();
           this.loading = false;
         },
         error: (err) => {
           console.error('Error loading tours:', err);
           this.error = 'Failed to load tours';
           this.loading = false;
+        }
+      });
+  }
+
+    loadPurchasedTours(): void {
+    this.purchaseService.getPurchasedTokens()
+      .subscribe({
+        next: (tokens) => {
+          this.purchasedTourIds = tokens.map(token => token.tour_id);
+          this.filterAvailableTours();
+        },
+        error: (err) => {
+          console.error('Error loading purchased tours:', err);
+          // ako nema kupljenih tura ili greske, dalje
+        }
+      });
+  }
+
+  filterAvailableTours(): void {
+    this.publishedTours = this.tours.filter(tour => 
+      tour.status.toLowerCase() === 'published' &&
+      !this.purchasedTourIds.includes(tour.id)
+    );
+  }
+
+  addToCart(tour: Tour): void {
+    this.cartService.addItem(tour.id, tour.name, tour.price)
+      .subscribe({
+        next: () => {
+          this.cartService.refreshCart();
+          this.cartService.showCart();
+        },
+        error: (err) => {
+          if (err.error && err.error.includes('already in cart')) {
+            alert('Tour is already in your cart!');
+          } else {
+            console.error('Error adding to cart:', err);
+            alert('Failed to add tour to cart. Please try again.');
+          }
         }
       });
   }

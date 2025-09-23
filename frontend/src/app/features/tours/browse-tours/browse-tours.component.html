@@ -1,7 +1,7 @@
 <div class="container mx-auto px-4 py-8">
   <div class="mb-8">
     <h1 class="text-4xl font-bold text-gray-800 mb-2">Browse Tours</h1>
-    <p class="text-gray-600">Discover amazing tours and adventures</p>
+    <p class="text-gray-600">Discover amazing published tours and adventures</p>
   </div>
 
   <!-- Loading State -->
@@ -26,17 +26,17 @@
   </div>
 
   <!-- Empty State -->
-  <div *ngIf="!loading && !error && tours.length === 0" class="text-center py-16">
+  <div *ngIf="!loading && !error && publishedTours.length === 0" class="text-center py-16">
     <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
-    <h3 class="mt-4 text-lg font-medium text-gray-900">No tours available</h3>
+    <h3 class="mt-4 text-lg font-medium text-gray-900">No published tours available</h3>
     <p class="mt-2 text-gray-500">Check back later for new tours.</p>
   </div>
 
   <!-- Tours Grid -->
-  <div *ngIf="!loading && !error && tours.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    <div *ngFor="let tour of tours" class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+  <div *ngIf="!loading && !error && publishedTours.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div *ngFor="let tour of publishedTours" class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
       <!-- Card Header with gradient -->
       <div class="h-48 bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 relative">
         <div class="absolute inset-0 bg-black bg-opacity-20"></div>
@@ -80,13 +80,13 @@
 
         <!-- Action Buttons -->
         <div class="flex space-x-2">
-          <button class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200">
-            View Details
-          </button>
-          <button class="px-4 py-2 border border-gray-300 hover:border-gray-400 text-gray-700 rounded-lg text-sm font-medium transition-colors duration-200">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+          <button 
+            (click)="addToCart(tour)"
+            class="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center justify-center">
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m-2.4 0L5 3M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17M17 13v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"></path>
             </svg>
+            Add to Cart
           </button>
         </div>
       </div>

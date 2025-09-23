@@ -17,11 +17,15 @@ export interface Tour {
   providedIn: 'root'
 })
 export class TourService {
-  private apiUrl = 'http://localhost:8000/api'; // Isti pattern kao AuthService
+  private apiUrl = 'http://localhost:8000/api';
 
   constructor(private http: HttpClient) {}
 
   getAllTours(): Observable<Tour[]> {
     return this.http.get<Tour[]>(`${this.apiUrl}/tours`);
+  }
+
+  getAuthorTours(): Observable<Tour[]> {
+    return this.http.get<Tour[]>(`${this.apiUrl}/tours/author-tours`);
   }
 }

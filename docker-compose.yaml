@@ -13,6 +13,7 @@ services:
       - blog-service
       - follow-service
       - stakeholders-service
+      - purchase-service
     networks:
       - monitoring-net
 
@@ -156,6 +157,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - monitoring-net
 
   purchase-service:
     build:
@@ -175,6 +178,8 @@ services:
     depends_on:
       purchase-db:
         condition: service_healthy
+    networks:
+      - monitoring-net
 
   # purchase-db:
   #   image: postgres:15
