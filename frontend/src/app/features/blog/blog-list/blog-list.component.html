@@ -8,31 +8,62 @@
       </p>
     </div>
   </div>
-  <!-- Toggle dugmad: For You / Explore -->
-  <div class="container mx-auto px-4 mb-8">
+
+  <!-- Toggle dugmad -->
+  <div class="container mx-auto px-4 mb-4">
     <div class="flex rounded-lg overflow-hidden w-3/4 mx-auto"> 
       <button
         class="flex-1 py-2 text-center font-medium transition-colors"
         [ngClass]="{'bg-base-200': selectedTab==='foryou', 'bg-base-100': selectedTab!=='foryou'}"
-        (click)="selectedTab='foryou'; loadForYouBlogs()"
+        (click)="selectedTab='foryou'; loadForYouBlogs(); showRecommendForm = false"
       >
         For You
       </button>
       <button
         class="flex-1 py-2 text-center font-medium transition-colors"
         [ngClass]="{'bg-base-200': selectedTab==='explore', 'bg-base-100': selectedTab!=='explore'}"
-        (click)="selectedTab='explore'; loadExploreBlogs()"
+        (click)="selectedTab='explore'; loadExploreBlogs(); showRecommendForm = false"
       >
         Explore
       </button>
+      <button
+        class="flex-1 py-2 text-center font-medium transition-colors"
+        [ngClass]="{'bg-base-200': selectedTab==='recommend', 'bg-base-100': selectedTab!=='recommend'}"
+        (click)="selectedTab='recommend'; showRecommendForm = true; loadRecommendations()"
+      >
+        Preporuči Blogere
+      </button>
     </div>
   </div>
-  <!-- Loader / Error -->
+
+  <!-- Forma za preporuku blogera -->
+<div *ngIf="showRecommendForm" class="container mx-auto px-4 mb-8">
+  <div class="bg-base-200 p-6 rounded-lg shadow">
+    <h2 class="text-xl font-bold mb-4">Preporuči Blogere</h2>
+
+    <div *ngIf="loadingRecommendations" class="text-gray-500 mb-4">Učitavanje preporuka...</div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4" *ngIf="recommendations.length > 0">
+      <div *ngFor="let user of recommendations" class="bg-base-100 rounded-lg shadow p-4 flex flex-col items-center">
+        <img [src]="user.image" alt="Avatar" class="w-20 h-20 rounded-full mb-2 object-cover" />
+        <h3 class="font-bold">{{ user.username }}</h3>
+        <p class="text-sm text-gray-500 text-center">{{ user.motto || 'Bez motta' }}</p>
+        <button class="btn btn-sm btn-primary mt-2" (click)="followUser(user.user_id)">Follow</button>
+      </div>
+    </div>
+
+    <p *ngIf="!loadingRecommendations && recommendations.length === 0" class="text-gray-500">Nema preporučenih blogera za prikaz.</p>
+
+    <div class="flex justify-end mt-4">
+      <button class="btn" (click)="showRecommendForm = false">Zatvori</button>
+    </div>
+  </div>
+</div>
+
+  <!-- Loader / Error za blogove -->
   <div *ngIf="loading" class="text-gray-500 mb-4">Učitavanje blogova...</div>
-  <!-- <div *ngIf="error" class="text-red-500 mb-4">{{ error }}</div> -->
 
   <!-- Blog kartice -->
-  <!-- [src]="blog.image_url || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e'" -->
   <div class="container mx-auto px-4 w-3/4">
     <div class="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       <ng-container *ngFor="let blog of blogs">
@@ -53,8 +84,8 @@
               {{ blog.content }}
             </p>
             <div class="mt-auto pt-3 text-sm flex items-center justify-between text-gray-400">
-              <span>Autor Ime</span>
-              <span>{{ blog.created_at | date: 'MM.dd.yyyy' }}</span>
+              <span>Autor: {{blog.username}}</span>
+              <span>Napravljen: {{ blog.created_at | date: 'MM.dd.yyyy' }}</span>
             </div>
           </div>
         </a>

@@ -8,5 +8,5 @@ export interface Comment {
   avatarUrl?: string;
   motto?: string;
   text: string;
-  createdAt?: string;
+  created_at?: string;
 }
