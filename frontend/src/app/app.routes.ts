@@ -1,21 +1,16 @@
 import { Routes } from '@angular/router';
 import { UserListComponent } from './features/admin/user-list/user-list.component';
-import { BlogListComponent } from './features/blog/blog-list/blog-list.component';
-import { BlogDetailsComponent } from './features/blog/blog-details/blog-details.component';
-import { RegisterComponent } from './features/auth/register/register.component';
 import { LoginComponent } from './features/auth/login/login.component';
+import { RegisterComponent } from './features/auth/register/register.component';
 import { WelcomeComponent } from './features/auth/welcome/welcome.component';
+import { BlogDetailsComponent } from './features/blog/blog-details/blog-details.component';
 import { DashboardComponent } from './features/stakeholders/dashboard/dashboard.component';
 import { ProfileComponent } from './features/stakeholders/profile/profile.component';
 
-import { UsersComponent } from './features/admin/users/users.component';
 
-import { CreateBlogComponent } from './features/blog/create-blog/create-blog.component';
 import { BlogFeedComponent } from './features/blog/blog-feed/blog-feed.component';
+import { CreateBlogComponent } from './features/blog/create-blog/create-blog.component';
 
-
-import { BrowseToursComponent } from './features/tours/browse-tours/browse-tours.component';
-import { CreateTourComponent } from './features/tours/create-tour/create-tour.component';
 import { MyToursComponent } from './features/tours/my-tours/my-tours.component';
 import { PositionSimulatorComponent } from './features/tours/position-simulator/position-simulator.component';
 
@@ -24,7 +19,7 @@ import { ReviewsComponent } from './features/reviews/reviews.component';
 
 
 import { ShoppingCartComponent } from './features/cart/shopping-cart.component';
-
+import { BrowseToursComponent } from './features/tours/browse-tours/browse-tours.component';
 
 export const routes: Routes = [
   // Auth routes
@@ -46,7 +41,19 @@ export const routes: Routes = [
   
   // Tours routes
   { path: 'tours/browse', component: BrowseToursComponent },
-  { path: 'tours/create', component: CreateTourComponent },
+  {
+  path: 'tours/create',
+  loadComponent: () =>
+    import('./features/tours/create-tour/create-tour.component')
+      .then(m => m.CreateTourComponent)
+},
+{
+  path: 'tours/add-tour-checkpoints',
+  loadComponent: () =>
+    import('./features/tours/add-tour-checkpoints/add-tour-checkpoints.component')
+      .then(m => m.AddTourCheckpointsComponent)
+},
+
   { path: 'tours/my-tours', component: MyToursComponent },
   { path: 'tours/position-simulator', component: PositionSimulatorComponent },
   
