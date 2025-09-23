@@ -4,10 +4,24 @@ import { Observable } from 'rxjs';
 import { Checkpoint } from '../models/checkpoint.model';
 import { Tour, TourRequest, TourResponse } from '../models/tour.model';
 
+/*
+export interface Tour {
+  id: string;
+  author_id: string;
+  name: string;
+  description: string;
+  difficulty: string;
+  tags: string;
+  status: string;
+  price: number;
+}*/
+
+
 @Injectable({
   providedIn: 'root'
 })
 export class TourService {
+
   private apiUrl = 'http://localhost:8000/api/tours';
 
   constructor(private http: HttpClient) {}
@@ -55,4 +69,8 @@ export class TourService {
   getKeyPointsByTour(tourId: string): Observable<Checkpoint[]> {
     return this.http.get<Checkpoint[]>(`${this.apiUrl}/${tourId}/keypoints`, { headers: this.getAuthHeaders() });
   }
+  getAuthorTours(): Observable<Tour[]> {
+    return this.http.get<Tour[]>(`${this.apiUrl}/tours/author-tours`);
+  }
 }
+

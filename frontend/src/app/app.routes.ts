@@ -12,6 +12,7 @@ import { BlogFeedComponent } from './features/blog/blog-feed/blog-feed.component
 import { CreateBlogComponent } from './features/blog/create-blog/create-blog.component';
 
 import { MyToursComponent } from './features/tours/my-tours/my-tours.component';
+import { AuthorToursComponent } from './features/tours/author-tours/author-tours.component';
 import { PositionSimulatorComponent } from './features/tours/position-simulator/position-simulator.component';
 
 
@@ -55,6 +56,7 @@ export const routes: Routes = [
 },
 
   { path: 'tours/my-tours', component: MyToursComponent },
+  { path: 'tours/author-tours', component: AuthorToursComponent },
   { path: 'tours/position-simulator', component: PositionSimulatorComponent },
   
   // Reviews (jedna komponenta za sve uloge)

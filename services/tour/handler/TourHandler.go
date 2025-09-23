@@ -59,10 +59,41 @@ func (h *TourHandler) GetTour(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(tour)
 }
 
+// zajedno sa getmytours nabavlja ture od vodica
 func (h *TourHandler) GetToursByAuthor(w http.ResponseWriter, r *http.Request) {
 	authorID := mux.Vars(r)["authorId"]
 
 	tours, err := h.TourService.GetToursByAuthor(authorID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(tours)
+}
+
+// Dodajte ovu novu metodu
+func (h *TourHandler) GetAuthorTours(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value(middleware.ContextUserID)
+	if userID == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	role, ok := r.Context().Value(middleware.ContextRole).(string)
+	if !ok || role != "guide" {
+		http.Error(w, "Only guides can access this endpoint", http.StatusForbidden)
+		return
+	}
+
+	authorID, err := uuid.Parse(userID.(string))
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	tours, err := h.TourService.GetToursByAuthor(authorID.String())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

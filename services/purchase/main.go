@@ -121,8 +121,9 @@ func startHTTPServer(cartHandler *handler.CartHandler, tokenHandler *handler.Tok
 	api.HandleFunc("/cart/items/{itemId}", cartHandler.RemoveItem).Methods("DELETE")
 	api.HandleFunc("/cart/total", cartHandler.GetTotal).Methods("GET")
 
-	// Token endpoints (checkout)
+	// Token endpoints
 	api.HandleFunc("/cart/checkout", tokenHandler.Checkout).Methods("POST")
+	api.HandleFunc("/cart/tokens/purchased", tokenHandler.GetPurchasedTours).Methods("GET")
 
 	port := getEnv("PORT", "8080")
 	log.Printf("HTTP Purchase service starting on :%s 🚀\n", port)

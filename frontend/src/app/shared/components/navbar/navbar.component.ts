@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { Subscription } from 'rxjs';
+import { CartService } from '../../../core/services/cart.service';
 
 @Component({
   selector: 'app-navbar',
@@ -17,7 +18,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   constructor(
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    public cartService: CartService
   ) {}
 
   ngOnInit(): void {
