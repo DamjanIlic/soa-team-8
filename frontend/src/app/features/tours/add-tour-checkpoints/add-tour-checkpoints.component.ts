@@ -86,7 +86,12 @@ export class AddTourCheckpointsComponent implements OnInit {
       const cpId = this.checkpoints[this.editingCheckpointIndex].id!;
       this.tourService.updateKeyPoint(cpId, checkpoint).subscribe({
         next: (updated) => {
-          this.checkpoints[this.editingCheckpointIndex!] = updated;
+          // zamenjujemo ceo niz sa novom referencom da Angular osveži listu
+          this.checkpoints = [
+            ...this.checkpoints.slice(0, this.editingCheckpointIndex!),
+            updated,
+            ...this.checkpoints.slice(this.editingCheckpointIndex! + 1)
+          ];
           this.updateMapMarkers();
           this.resetForm();
           this.editingCheckpointIndex = null;
@@ -100,7 +105,7 @@ export class AddTourCheckpointsComponent implements OnInit {
     } else {
       this.tourService.addKeyPoint(this.tourId, checkpoint).subscribe({
         next: (saved) => {
-          this.checkpoints.push(saved);
+          this.checkpoints = [...this.checkpoints, saved]; // dodajemo nov checkpoint sa novom referencom
           this.updateMapMarkers();
           this.resetForm();
           this.saving = false;
@@ -125,14 +130,16 @@ export class AddTourCheckpointsComponent implements OnInit {
     this.editingCheckpointIndex = index;
   }
 
-
   deleteCheckpoint(index: number): void {
     const cp = this.checkpoints[index];
     if (!cp.id) return;
 
     this.tourService.deleteKeyPoint(cp.id).subscribe({
       next: () => {
-        this.checkpoints.splice(index, 1);
+        this.checkpoints = [
+          ...this.checkpoints.slice(0, index),
+          ...this.checkpoints.slice(index + 1)
+        ];
         this.updateMapMarkers();
         if (this.editingCheckpointIndex === index) this.resetForm();
       },
@@ -163,7 +170,7 @@ export class AddTourCheckpointsComponent implements OnInit {
 
   addDuration() {
     if (this.durations.some(d => d.transport === this.selectedTransport)) return;
-    this.durations.push({ transport: this.selectedTransport, minutes: this.minutes });
+    this.durations = [...this.durations, { transport: this.selectedTransport, minutes: this.minutes }];
     this.syncDurationsToBackend();
   }
 

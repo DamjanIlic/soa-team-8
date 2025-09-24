@@ -1,8 +1,5 @@
 <div class="container mx-auto px-4 py-8">
-  <div class="mb-8">
-    <h1 class="text-4xl font-bold text-gray-800 mb-2">My Tours</h1>
-    <p class="text-gray-600">Manage and view your created tours</p>
-  </div>
+  <h1 class="text-4xl font-bold mb-2">My Tours</h1>
 
   <!-- Loading -->
   <div *ngIf="loading" class="flex justify-center items-center py-16">
@@ -12,36 +9,18 @@
 
   <!-- Error -->
   <div *ngIf="error && !loading" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-    <div class="flex">
-      <div class="flex-shrink-0">
-        <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                clip-rule="evenodd" />
-        </svg>
-      </div>
-      <div class="ml-3">
-        <h3 class="text-sm font-medium text-red-800">Error</h3>
-        <p class="mt-1 text-sm text-red-700">{{ error }}</p>
-      </div>
-    </div>
+    {{ error }}
   </div>
 
   <!-- Empty -->
   <div *ngIf="!loading && !error && authorTours.length === 0" class="text-center py-16">
-    <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-    </svg>
-    <h3 class="mt-4 text-lg font-medium text-gray-900">No tours created</h3>
+    <h3 class="text-lg font-medium text-gray-900">No tours created</h3>
     <p class="mt-2 text-gray-500">Start by creating your first tour!</p>
   </div>
 
   <!-- Tours Grid -->
-  <div *ngIf="!loading && !error && authorTours.length > 0"
-       class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    <div *ngFor="let tour of authorTours; trackBy: trackByTourId"
-         class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
-
+  <div *ngIf="!loading && !error && authorTours.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div *ngFor="let tour of authorTours; trackBy: trackByTourId" class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
       <!-- Card Header -->
       <div class="h-48 bg-gradient-to-br from-purple-400 via-blue-500 to-green-500 relative">
         <div class="absolute inset-0 bg-black bg-opacity-20"></div>
@@ -60,92 +39,71 @@
 
       <!-- Card Body -->
       <div class="p-6">
-        <p class="text-gray-600 text-sm mb-4 line-clamp-3">
-          {{ tour.description || 'No description available' }}
-        </p>
-
-        <div class="flex items-center justify-between mb-4">
-          <span [class]="'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ' + getDifficultyColor(tour.difficulty)">
-            {{ tour.difficulty | titlecase }}
-          </span>
-        </div>
+        <p class="text-gray-600 text-sm mb-4 line-clamp-3">{{ tour.description || 'No description available' }}</p>
+        <span [class]="'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ' + getDifficultyColor(tour.difficulty)">
+          {{ tour.difficulty | titlecase }}
+        </span>
 
         <div *ngIf="parseTags(tour.tags).length > 0" class="flex flex-wrap gap-1 mb-4">
-          <span *ngFor="let tag of parseTags(tour.tags)"
-                class="inline-block bg-purple-50 text-purple-700 text-xs px-2 py-1 rounded-md">
+          <span *ngFor="let tag of parseTags(tour.tags)" class="inline-block bg-purple-50 text-purple-700 text-xs px-2 py-1 rounded-md">
             #{{ tag }}
           </span>
         </div>
 
-        <!-- Checkpoints & Durations Info -->
-        <div class="text-gray-700 text-sm mb-4 space-y-1">
+        <div class="text-gray-700 text-sm mb-4">
           <div>Checkpoints: {{ tour.checkpoints?.length ?? 0 }}</div>
-
-<div class="flex flex-wrap gap-2" *ngIf="(tour.durations?.length ?? 0) > 0">
-  <span *ngFor="let d of tour.durations ?? []"
-        class="inline-flex items-center px-2 py-1 bg-yellow-50 text-yellow-800 text-xs rounded">
-    ⏱ {{ d.transport | titlecase }}: {{ d.minutes }} min
-  </span>
-</div>
-
-
+          <div *ngIf="(tour.durations?.length ?? 0) > 0" class="flex flex-wrap gap-2 mt-1">
+            <span *ngFor="let d of tour.durations ?? []" class="inline-flex items-center px-2 py-1 bg-yellow-50 text-yellow-800 text-xs rounded">
+              ⏱ {{ d.transport | titlecase }}: {{ d.minutes }} min
+            </span>
+          </div>
         </div>
 
         <!-- Action Buttons -->
         <div class="flex space-x-2">
-          <button class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
-                  (click)="editTourStatus(tour)">
+          <button (click)="editTourStatus(tour)" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
             Edit Status
           </button>
-          <button class="px-4 py-2 border border-gray-300 hover:border-gray-400 text-gray-700 rounded-lg text-sm font-medium transition-colors duration-200">
-            View Details
+          <button (click)="manageCheckpoints(tour)" class="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
+            Manage Checkpoints
           </button>
         </div>
 
         <!-- Edit Status Panel -->
-        <div *ngIf="selectedTour && selectedTour.id === tour.id"
-             class="mt-4 p-4 border rounded-lg bg-gray-50 space-y-4">
+        <div *ngIf="selectedTour && selectedTour.id === tour.id" class="mt-4 p-4 border rounded-lg bg-gray-50 space-y-4">
 
-          <!-- Draft: input for price + publish button -->
+          <!-- Draft -->
           <div *ngIf="selectedTour.status === 'draft'">
             <label class="block mb-1 text-sm font-medium text-gray-700">Set Price ($):</label>
             <input type="number" min="1" [(ngModel)]="selectedTour.price"
-                   class="w-full border-gray-300 rounded-md p-2 mb-2"
-                   placeholder="Enter price" />
-            <button (click)="saveStatus('published')"
-                    class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm"
-                    [disabled]="statusLoading">
+                   class="w-full border-gray-300 rounded-md p-2 mb-2" placeholder="Enter price" />
+            <button (click)="saveStatus('published')" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm" [disabled]="statusLoading">
               {{ statusLoading ? 'Publishing...' : 'Publish' }}
             </button>
           </div>
 
-          <!-- Published: Archive button -->
+          <!-- Published -->
           <div *ngIf="selectedTour.status === 'published'">
-            <button (click)="saveStatus('archived')"
-                    class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm"
-                    [disabled]="statusLoading">
+            <button (click)="saveStatus('archived')" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm" [disabled]="statusLoading">
               {{ statusLoading ? 'Archiving...' : 'Archive' }}
             </button>
           </div>
 
-          <!-- Archived: Reactivate button -->
+          <!-- Archived -->
           <div *ngIf="selectedTour.status === 'archived'">
-            <button (click)="saveStatus('draft')"
-                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
-                    [disabled]="statusLoading">
+            <button (click)="saveStatus('draft')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm" [disabled]="statusLoading">
               {{ statusLoading ? 'Reactivating...' : 'Reactivate' }}
             </button>
           </div>
 
-          <!-- Cancel button -->
+          <!-- Cancel -->
           <div class="flex justify-end">
-            <button (click)="cancelEditStatus()"
-                    class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg text-sm">
+            <button (click)="cancelEditStatus()" class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg text-sm">
               Cancel
             </button>
           </div>
-
         </div>
+
       </div>
     </div>
   </div>
