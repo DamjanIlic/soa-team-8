@@ -11,8 +11,8 @@ import { ProfileComponent } from './features/stakeholders/profile/profile.compon
 import { BlogFeedComponent } from './features/blog/blog-feed/blog-feed.component';
 import { CreateBlogComponent } from './features/blog/create-blog/create-blog.component';
 
-import { MyToursComponent } from './features/tours/my-tours/my-tours.component';
 import { AuthorToursComponent } from './features/tours/author-tours/author-tours.component';
+import { MyToursComponent } from './features/tours/my-tours/my-tours.component';
 import { PositionSimulatorComponent } from './features/tours/position-simulator/position-simulator.component';
 
 
@@ -55,6 +55,10 @@ export const routes: Routes = [
     import('./features/tours/add-tour-checkpoints/add-tour-checkpoints.component')
       .then(m => m.AddTourCheckpointsComponent)
 },
+  {
+    path: 'tours/manage-checkpoints/:id',
+    loadComponent: () => import('./features/tours/add-tour-checkpoints/add-tour-checkpoints.component').then(m => m.AddTourCheckpointsComponent)
+  },
 
   { path: 'tours/my-tours', component: MyToursComponent },
   { path: 'tours/author-tours', component: AuthorToursComponent },

@@ -1,18 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { jwtDecode } from 'jwt-decode';
 import { Checkpoint, Duration } from '../../../core/models/tour.model';
 import { TourService } from '../../../core/services/tour.service';
-
-interface TourCheckpoint extends Checkpoint {
-  saved?: boolean;
-}
-
-interface TourDuration extends Duration {
-  transport: string;
-  saved?: boolean;
-}
 
 interface Tour {
   id: string;
@@ -23,10 +15,8 @@ interface Tour {
   tags: string;
   status: 'draft' | 'published' | 'archived';
   price: number;
-  distance_km?: number;
-  checkpoints?: TourCheckpoint[];
-  durations?: TourDuration[];
-  updated_at?: string;
+  checkpoints?: Checkpoint[];
+  durations?: Duration[];
 }
 
 @Component({
@@ -45,7 +35,7 @@ export class AuthorToursComponent implements OnInit {
 
   private userId: string = '';
 
-  constructor(private tourService: TourService) { }
+  constructor(private tourService: TourService, private router: Router) { }
 
   ngOnInit(): void {
     this.extractUserIdFromToken();
@@ -71,16 +61,16 @@ export class AuthorToursComponent implements OnInit {
           .filter(t => t.author_id === this.userId)
           .map(t => ({
             ...t,
-            checkpoints: (t.checkpoints ?? []).map(kp => ({ ...kp })) as TourCheckpoint[],
+            price: t.price ?? 0,
+            checkpoints: [...(t.checkpoints ?? [])],
             durations: Object.values(
-              (t.durations ?? []).reduce((acc: Record<string, TourDuration>, d: any) => {
-              const transport = d.transport ?? d.transport_type;
-              const duration = d.duration ?? d.minutes ?? 0;
-              acc[transport] = { ...d, transport, duration } as TourDuration;
+              (t.durations ?? []).reduce((acc: Record<string, Duration>, d: any) => {
+                const transport = d.transport ?? d.transport_type ?? 'Unknown';
+                const minutes = d.minutes ?? d.duration ?? 0;
+                acc[transport] = { transport, minutes } as Duration;
                 return acc;
               }, {})
-            ) as TourDuration[],
-            price: t.price ?? 0
+            )
           }));
         this.loading = false;
       },
@@ -106,23 +96,20 @@ export class AuthorToursComponent implements OnInit {
     const tour = this.selectedTour;
     const tourId = tour.id;
 
-    // Reactivate archived to draft
     if (newStatus === 'draft' && tour.status === 'archived') {
       tour.status = 'draft';
       this.selectedTour = { ...tour };
       return;
     }
 
-    // Validate price
     tour.price = Number(tour.price);
     if (isNaN(tour.price) || tour.price <= 0) {
       alert('Price must be greater than 0.');
       return;
     }
 
-    // Validate required fields
     if (!tour.name || !tour.description || !tour.difficulty || !tour.tags) {
-      alert('Fill in all required fields: name, description, difficulty, tags.');
+      alert('Fill in all required fields.');
       return;
     }
 
@@ -133,7 +120,6 @@ export class AuthorToursComponent implements OnInit {
 
     this.statusLoading = true;
 
-    // Update price
     this.tourService.updatePrice(tourId, tour.price).subscribe({
       next: () => {
         const finish = () => {
@@ -146,8 +132,6 @@ export class AuthorToursComponent implements OnInit {
           this.tourService.publishTour(tourId).subscribe({ next: finish, error: this.handleError });
         } else if (newStatus === 'archived') {
           this.tourService.archiveTour(tourId).subscribe({ next: finish, error: this.handleError });
-        } else if (newStatus === 'draft') {
-          finish();
         } else {
           finish();
         }
@@ -193,5 +177,9 @@ export class AuthorToursComponent implements OnInit {
 
   trackByTourId(index: number, tour: Tour) {
     return tour.id;
+  }
+
+  manageCheckpoints(tour: Tour): void {
+    this.router.navigate(['/tours/manage-checkpoints', tour.id], { state: { tour } });
   }
 }
