@@ -19,18 +19,30 @@ type BlogHandler struct {
 var tracer = otel.Tracer("blog-service")
 
 func (h *BlogHandler) Create(w http.ResponseWriter, r *http.Request) {
-	var blog model.Blog
-	if err := json.NewDecoder(r.Body).Decode(&blog); err != nil {
+	// Dekodiraj body u privremeni struct
+	var input struct {
+		Title    string `json:"title"`
+		Content  string `json:"content"`
+		ImageURL string `json:"image_url"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// Ako ID nije setovan, kreiraj novi
-	if blog.ID == "" {
-		blog.ID = model.NewBlog(blog.Title, blog.Content, blog.ImageURL).ID
+	// Uzmi userID iz context-a
+	userIDCtx := r.Context().Value(middleware.ContextUserID)
+	if userIDCtx == nil {
+		http.Error(w, "missing userID in context", http.StatusUnauthorized)
+		return
 	}
+	userID := userIDCtx.(string)
 
-	if err := h.BlogService.Create(&blog); err != nil {
+	// Kreiraj novi blog sa userID-om
+	blog := model.NewBlog(input.Title, input.Content, input.ImageURL, userID)
+
+	// Sačuvaj u servisu
+	if err := h.BlogService.Create(blog); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -112,6 +124,24 @@ func (h *BlogHandler) GetForUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	blogs, err := h.BlogService.GetForUser(userId)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(blogs)
+}
+
+func (h *BlogHandler) GetMyBlogs(w http.ResponseWriter, r *http.Request) {
+	userIDCtx := r.Context().Value(middleware.ContextUserID)
+	if userIDCtx == nil {
+		http.Error(w, "missing userID in context", http.StatusUnauthorized)
+		return
+	}
+	userID := userIDCtx.(string)
+
+	blogs, err := h.BlogService.GetMyBlogs(userID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

@@ -28,7 +28,7 @@ type BlogResponse struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-func NewBlog(title, content, imageURL string) *Blog {
+func NewBlog(title, content, imageURL string, userID string) *Blog {
 	return &Blog{
 		ID:        uuid.New().String(),
 		Title:     title,
@@ -37,6 +37,7 @@ func NewBlog(title, content, imageURL string) *Blog {
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 		Likes:     0,
+		UserID:    userID,
 	}
 }
 

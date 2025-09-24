@@ -187,3 +187,7 @@ func (s *BlogService) GetForUser(userId string) ([]model.Blog, error) {
 
 	return filtered, nil
 }
+
+func (s *BlogService) GetMyBlogs(userID string) ([]model.Blog, error) {
+	return s.BlogRepo.GetByUserID(userID)
+}

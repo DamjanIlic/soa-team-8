@@ -10,26 +10,30 @@
 
   <!-- Naslov i autor -->
   <h1 class="text-4xl font-bold mb-2">{{ blog.title }}</h1>
-  <p class="text-gray-600 mb-6">
+  <p class="text-gray-600 mb-6" *ngIf="!isMyBlog">
     Autor: <span class="font-medium">{{ blog.username }}</span>
     <br />
     Kreiran: {{ blog.created_at | date: 'dd.MM.yyyy HH:mm' }}
     <br />
     Poslednji put ažuriran: {{ blog.updated_at | date: 'dd.MM.yyyy HH:mm' }}
   </p>
+  <!-- Za My Blogs -->
+  <p class="text-gray-600 mb-6" *ngIf="isMyBlog">
+    Kreiran: {{ blog.created_at | date: 'dd.MM.yyyy HH:mm' }}
+  </p>
 
   <!-- Markdown sadržaj -->
   <markdown [data]="blog.content"></markdown>
 
   <!-- Like / Unlike -->
-  <div class="flex items-center gap-4 mt-6">
+  <div class="flex items-center gap-4 mt-6" *ngIf="!isMyBlog">
     <button class="px-4 py-2 font-medium bg-blue-600 text-white hover:bg-blue-700" (click)="likeBlog()">Like</button>
     <button class="px-4 py-2 font-medium bg-gray-200 text-gray-800 hover:bg-gray-300" (click)="unlikeBlog()">Unlike</button>
     <span class="text-gray-600">Likes: {{ blog.likes }}</span>
   </div>
 
   <!-- Komentari -->
-  <div class="mt-10 p-6 border border-gray-300 bg-white rounded-sm">
+  <div class="mt-10 p-6 border border-gray-300 bg-white rounded-sm" *ngIf="!isMyBlog">
     <h2 class="text-2xl font-bold mb-4">Komentari</h2>
 
     <!-- Lista komentara -->

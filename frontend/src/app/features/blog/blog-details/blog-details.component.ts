@@ -29,6 +29,7 @@ export class BlogDetailsComponent implements OnInit {
 
   comments: Comment[] = [];
   user_id = "";
+  isMyBlog = false;
   newCommentText = '';
   followingMap: Record<string, boolean> = {};
   a = 5
@@ -87,6 +88,7 @@ export class BlogDetailsComponent implements OnInit {
         console.log(this.blog)
         this.blogOwnerId = data.user_id;
         console.log('bi', this.blogOwnerId)
+        this.isMyBlog = this.blogOwnerId === this.user_id;
       },
       error: (err) => console.error(err)
     });

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
-import { Blog } from '../models/blog.model';
+import { Blog, BlogRequest, BlogResponse } from '../models/blog.model';
 import { Comment } from '../models/comment.model';
 
 @Injectable({
@@ -12,31 +12,45 @@ export class BlogService {
 
   constructor(private http: HttpClient) {}
 
+  private getAuthHeaders(): HttpHeaders {
+    const token = localStorage.getItem('access_token');
+    return new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+  }
+
   // ================== BLOG METHODS ==================
 
   getAll(): Observable<Blog[]> {
-    return this.http.get<Blog[]>(this.apiUrl);
+    return this.http.get<Blog[]>(this.apiUrl, { headers: this.getAuthHeaders() });
+  }
+
+  getMyBlogs(): Observable<Blog[]> {
+  return this.http.get<Blog[]>(`${this.apiUrl}/my`, { headers: this.getAuthHeaders() });
   }
 
   getById(id: string): Observable<Blog> {
-    return this.http.get<Blog>(`${this.apiUrl}/${id}`);
+    return this.http.get<Blog>(`${this.apiUrl}/${id}`, { headers: this.getAuthHeaders() });
   }
 
-  create(blog: Omit<Blog, 'id' | 'created_at' | 'updated_at' | 'likes'>): Observable<Blog> {
-    return this.http.post<Blog>(this.apiUrl, blog);
+  create(blog: BlogRequest): Observable<BlogResponse> {
+    return this.http.post<BlogResponse>(this.apiUrl, blog, { headers: this.getAuthHeaders() });
   }
 
   like(blogId: string): Observable<number> {
     return this.http.post<{ likes: number }>(
       `${this.apiUrl}/${blogId}/like`,
-      {}
+      {}, 
+      { headers: this.getAuthHeaders() }
     ).pipe(map(res => res.likes));
   }
 
   unlike(blogId: string): Observable<number> {
     return this.http.post<{ likes: number }>(
       `${this.apiUrl}/${blogId}/unlike`,
-      {}
+      {}, 
+      { headers: this.getAuthHeaders() }
     ).pipe(map(res => res.likes));
   }
 
@@ -61,7 +75,7 @@ export class BlogService {
       throw new Error('No current user ID found in token');
     }
 
-    return this.http.get<Blog[]>(`http://localhost:8000/api/blogs/user/${userId}`);
+    return this.http.get<Blog[]>(`${this.apiUrl}/user/${userId}`, { headers: this.getAuthHeaders() });
   }
 
   // ================== COMMENT METHODS ==================

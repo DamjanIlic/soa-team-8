@@ -111,9 +111,10 @@ func main() {
 		defer span.End()
 		blogHandler.GetAll(w, r.WithContext(ctx))
 	}).Methods("GET")
-	api.HandleFunc("/blogs/{id}", blogHandler.Get).Methods("GET")
 
+	api.Handle("/blogs/my", middleware.JWTMiddleware(http.HandlerFunc(blogHandler.GetMyBlogs))).Methods("GET")
 	api.Path("/blogs/user/{userId}").Methods("GET").HandlerFunc(blogHandler.GetForUser)
+	api.HandleFunc("/blogs/{id}", blogHandler.Get).Methods("GET")
 
 	// Kreiranje bloga i like/unlike zahtevaju autentifikaciju
 	api.Handle("/blogs", middleware.JWTMiddleware(http.HandlerFunc(blogHandler.Create))).Methods("POST")

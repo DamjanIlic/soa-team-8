@@ -2,7 +2,7 @@ import { ApplicationConfig, importProvidersFrom, provideZoneChangeDetection } fr
 import { provideRouter, RouterModule } from '@angular/router';
 import { routes } from './app.routes';
 
-import { MarkdownModule, provideMarkdown } from 'ngx-markdown';
+import { provideMarkdown } from 'ngx-markdown';
 
 // export const appConfig: ApplicationConfig = {
 //   providers: [provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(routes), importProvidersFrom(HttpClientModule),
@@ -21,7 +21,6 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptorsFromDi()),
     { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
     //importProvidersFrom(HttpClientModule),
-    MarkdownModule,
     provideMarkdown(),
   ]
 };
