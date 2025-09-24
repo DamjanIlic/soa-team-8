@@ -2,11 +2,12 @@
 // versions:
 // 	protoc-gen-go v1.36.9
 // 	protoc        v6.32.1
-// source: proto/purchase.proto
+// source: purchase.proto
 
 package pb
 
 import (
+	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -30,7 +31,7 @@ type CheckoutRequest struct {
 
 func (x *CheckoutRequest) Reset() {
 	*x = CheckoutRequest{}
-	mi := &file_proto_purchase_proto_msgTypes[0]
+	mi := &file_purchase_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -42,7 +43,7 @@ func (x *CheckoutRequest) String() string {
 func (*CheckoutRequest) ProtoMessage() {}
 
 func (x *CheckoutRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_purchase_proto_msgTypes[0]
+	mi := &file_purchase_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -55,7 +56,7 @@ func (x *CheckoutRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CheckoutRequest.ProtoReflect.Descriptor instead.
 func (*CheckoutRequest) Descriptor() ([]byte, []int) {
-	return file_proto_purchase_proto_rawDescGZIP(), []int{0}
+	return file_purchase_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *CheckoutRequest) GetUserId() string {
@@ -75,7 +76,7 @@ type CheckoutResponse struct {
 
 func (x *CheckoutResponse) Reset() {
 	*x = CheckoutResponse{}
-	mi := &file_proto_purchase_proto_msgTypes[1]
+	mi := &file_purchase_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -87,7 +88,7 @@ func (x *CheckoutResponse) String() string {
 func (*CheckoutResponse) ProtoMessage() {}
 
 func (x *CheckoutResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_purchase_proto_msgTypes[1]
+	mi := &file_purchase_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -100,7 +101,7 @@ func (x *CheckoutResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CheckoutResponse.ProtoReflect.Descriptor instead.
 func (*CheckoutResponse) Descriptor() ([]byte, []int) {
-	return file_proto_purchase_proto_rawDescGZIP(), []int{1}
+	return file_purchase_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *CheckoutResponse) GetTokens() []*TourPurchaseToken {
@@ -117,6 +118,186 @@ func (x *CheckoutResponse) GetMessage() string {
 	return ""
 }
 
+type GetCartRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetCartRequest) Reset() {
+	*x = GetCartRequest{}
+	mi := &file_purchase_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetCartRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetCartRequest) ProtoMessage() {}
+
+func (x *GetCartRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_purchase_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetCartRequest.ProtoReflect.Descriptor instead.
+func (*GetCartRequest) Descriptor() ([]byte, []int) {
+	return file_purchase_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *GetCartRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+type GetCartResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	TouristId     string                 `protobuf:"bytes,2,opt,name=tourist_id,json=touristId,proto3" json:"tourist_id,omitempty"`
+	Items         []*CartItem            `protobuf:"bytes,3,rep,name=items,proto3" json:"items,omitempty"`
+	Total         float64                `protobuf:"fixed64,4,opt,name=total,proto3" json:"total,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetCartResponse) Reset() {
+	*x = GetCartResponse{}
+	mi := &file_purchase_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetCartResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetCartResponse) ProtoMessage() {}
+
+func (x *GetCartResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_purchase_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetCartResponse.ProtoReflect.Descriptor instead.
+func (*GetCartResponse) Descriptor() ([]byte, []int) {
+	return file_purchase_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *GetCartResponse) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *GetCartResponse) GetTouristId() string {
+	if x != nil {
+		return x.TouristId
+	}
+	return ""
+}
+
+func (x *GetCartResponse) GetItems() []*CartItem {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
+func (x *GetCartResponse) GetTotal() float64 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
+type CartItem struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	TourId        string                 `protobuf:"bytes,2,opt,name=tour_id,json=tourId,proto3" json:"tour_id,omitempty"`
+	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	Price         float64                `protobuf:"fixed64,4,opt,name=price,proto3" json:"price,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CartItem) Reset() {
+	*x = CartItem{}
+	mi := &file_purchase_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CartItem) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CartItem) ProtoMessage() {}
+
+func (x *CartItem) ProtoReflect() protoreflect.Message {
+	mi := &file_purchase_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CartItem.ProtoReflect.Descriptor instead.
+func (*CartItem) Descriptor() ([]byte, []int) {
+	return file_purchase_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *CartItem) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *CartItem) GetTourId() string {
+	if x != nil {
+		return x.TourId
+	}
+	return ""
+}
+
+func (x *CartItem) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *CartItem) GetPrice() float64 {
+	if x != nil {
+		return x.Price
+	}
+	return 0
+}
+
 type TourPurchaseToken struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	TourId        string                 `protobuf:"bytes,1,opt,name=tour_id,json=tourId,proto3" json:"tour_id,omitempty"`
@@ -129,7 +310,7 @@ type TourPurchaseToken struct {
 
 func (x *TourPurchaseToken) Reset() {
 	*x = TourPurchaseToken{}
-	mi := &file_proto_purchase_proto_msgTypes[2]
+	mi := &file_purchase_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -141,7 +322,7 @@ func (x *TourPurchaseToken) String() string {
 func (*TourPurchaseToken) ProtoMessage() {}
 
 func (x *TourPurchaseToken) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_purchase_proto_msgTypes[2]
+	mi := &file_purchase_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -154,7 +335,7 @@ func (x *TourPurchaseToken) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TourPurchaseToken.ProtoReflect.Descriptor instead.
 func (*TourPurchaseToken) Descriptor() ([]byte, []int) {
-	return file_proto_purchase_proto_rawDescGZIP(), []int{2}
+	return file_purchase_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *TourPurchaseToken) GetTourId() string {
@@ -185,75 +366,95 @@ func (x *TourPurchaseToken) GetCreatedAt() string {
 	return ""
 }
 
-var File_proto_purchase_proto protoreflect.FileDescriptor
+var File_purchase_proto protoreflect.FileDescriptor
 
-const file_proto_purchase_proto_rawDesc = "" +
+const file_purchase_proto_rawDesc = "" +
 	"\n" +
-	"\x14proto/purchase.proto\x12\bpurchase\"*\n" +
+	"\x0epurchase.proto\x12\bpurchase\x1a\x1cgoogle/api/annotations.proto\"*\n" +
 	"\x0fCheckoutRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\"a\n" +
 	"\x10CheckoutResponse\x123\n" +
 	"\x06tokens\x18\x01 \x03(\v2\x1b.purchase.TourPurchaseTokenR\x06tokens\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\"\x80\x01\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\")\n" +
+	"\x0eGetCartRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\"\x80\x01\n" +
+	"\x0fGetCartResponse\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n" +
+	"\n" +
+	"tourist_id\x18\x02 \x01(\tR\ttouristId\x12(\n" +
+	"\x05items\x18\x03 \x03(\v2\x12.purchase.CartItemR\x05items\x12\x14\n" +
+	"\x05total\x18\x04 \x01(\x01R\x05total\"]\n" +
+	"\bCartItem\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
+	"\atour_id\x18\x02 \x01(\tR\x06tourId\x12\x12\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\x12\x14\n" +
+	"\x05price\x18\x04 \x01(\x01R\x05price\"\x80\x01\n" +
 	"\x11TourPurchaseToken\x12\x17\n" +
 	"\atour_id\x18\x01 \x01(\tR\x06tourId\x12\x1d\n" +
 	"\n" +
 	"tourist_id\x18\x02 \x01(\tR\ttouristId\x12\x14\n" +
 	"\x05token\x18\x03 \x01(\tR\x05token\x12\x1d\n" +
 	"\n" +
-	"created_at\x18\x04 \x01(\tR\tcreatedAt2T\n" +
-	"\x0fPurchaseService\x12A\n" +
-	"\bCheckout\x12\x19.purchase.CheckoutRequest\x1a\x1a.purchase.CheckoutResponseB\x06Z\x04./pbb\x06proto3"
+	"created_at\x18\x04 \x01(\tR\tcreatedAt2\xc6\x01\n" +
+	"\x0fPurchaseService\x12`\n" +
+	"\bCheckout\x12\x19.purchase.CheckoutRequest\x1a\x1a.purchase.CheckoutResponse\"\x1d\x82\xd3\xe4\x93\x02\x17:\x01*\"\x12/api/cart/checkout\x12Q\n" +
+	"\aGetCart\x12\x18.purchase.GetCartRequest\x1a\x19.purchase.GetCartResponse\"\x11\x82\xd3\xe4\x93\x02\v\x12\t/api/cartB\x06Z\x04./pbb\x06proto3"
 
 var (
-	file_proto_purchase_proto_rawDescOnce sync.Once
-	file_proto_purchase_proto_rawDescData []byte
+	file_purchase_proto_rawDescOnce sync.Once
+	file_purchase_proto_rawDescData []byte
 )
 
-func file_proto_purchase_proto_rawDescGZIP() []byte {
-	file_proto_purchase_proto_rawDescOnce.Do(func() {
-		file_proto_purchase_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_proto_purchase_proto_rawDesc), len(file_proto_purchase_proto_rawDesc)))
+func file_purchase_proto_rawDescGZIP() []byte {
+	file_purchase_proto_rawDescOnce.Do(func() {
+		file_purchase_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_purchase_proto_rawDesc), len(file_purchase_proto_rawDesc)))
 	})
-	return file_proto_purchase_proto_rawDescData
+	return file_purchase_proto_rawDescData
 }
 
-var file_proto_purchase_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
-var file_proto_purchase_proto_goTypes = []any{
+var file_purchase_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_purchase_proto_goTypes = []any{
 	(*CheckoutRequest)(nil),   // 0: purchase.CheckoutRequest
 	(*CheckoutResponse)(nil),  // 1: purchase.CheckoutResponse
-	(*TourPurchaseToken)(nil), // 2: purchase.TourPurchaseToken
+	(*GetCartRequest)(nil),    // 2: purchase.GetCartRequest
+	(*GetCartResponse)(nil),   // 3: purchase.GetCartResponse
+	(*CartItem)(nil),          // 4: purchase.CartItem
+	(*TourPurchaseToken)(nil), // 5: purchase.TourPurchaseToken
 }
-var file_proto_purchase_proto_depIdxs = []int32{
-	2, // 0: purchase.CheckoutResponse.tokens:type_name -> purchase.TourPurchaseToken
-	0, // 1: purchase.PurchaseService.Checkout:input_type -> purchase.CheckoutRequest
-	1, // 2: purchase.PurchaseService.Checkout:output_type -> purchase.CheckoutResponse
-	2, // [2:3] is the sub-list for method output_type
-	1, // [1:2] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+var file_purchase_proto_depIdxs = []int32{
+	5, // 0: purchase.CheckoutResponse.tokens:type_name -> purchase.TourPurchaseToken
+	4, // 1: purchase.GetCartResponse.items:type_name -> purchase.CartItem
+	0, // 2: purchase.PurchaseService.Checkout:input_type -> purchase.CheckoutRequest
+	2, // 3: purchase.PurchaseService.GetCart:input_type -> purchase.GetCartRequest
+	1, // 4: purchase.PurchaseService.Checkout:output_type -> purchase.CheckoutResponse
+	3, // 5: purchase.PurchaseService.GetCart:output_type -> purchase.GetCartResponse
+	4, // [4:6] is the sub-list for method output_type
+	2, // [2:4] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
-func init() { file_proto_purchase_proto_init() }
-func file_proto_purchase_proto_init() {
-	if File_proto_purchase_proto != nil {
+func init() { file_purchase_proto_init() }
+func file_purchase_proto_init() {
+	if File_purchase_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_purchase_proto_rawDesc), len(file_proto_purchase_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_purchase_proto_rawDesc), len(file_purchase_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_proto_purchase_proto_goTypes,
-		DependencyIndexes: file_proto_purchase_proto_depIdxs,
-		MessageInfos:      file_proto_purchase_proto_msgTypes,
+		GoTypes:           file_purchase_proto_goTypes,
+		DependencyIndexes: file_purchase_proto_depIdxs,
+		MessageInfos:      file_purchase_proto_msgTypes,
 	}.Build()
-	File_proto_purchase_proto = out.File
-	file_proto_purchase_proto_goTypes = nil
-	file_proto_purchase_proto_depIdxs = nil
+	File_purchase_proto = out.File
+	file_purchase_proto_goTypes = nil
+	file_purchase_proto_depIdxs = nil
 }

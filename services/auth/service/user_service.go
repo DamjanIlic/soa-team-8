@@ -54,6 +54,10 @@ func (s *UserService) Login(email, password string) (string, error) {
 		return "", errors.New("invalid credentials")
 	}
 
+	if user.Blocked {
+		return "", errors.New("account is blocked")
+	}
+
 	token, err := util.GenerateJWT(user.ID.String(), string(user.Role))
 	if err != nil {
 		return "", err

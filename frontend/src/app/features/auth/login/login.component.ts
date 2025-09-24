@@ -32,19 +32,27 @@ export class LoginComponent {
 
     this.authService.login(this.loginForm.value).subscribe({
       next: (response) => {
-        // Koristi AuthService umesto TokenStorage
-        this.authService.setAuthStatus(response.token); // ili response.access_token, zavisi šta backend šalje
-        
+        console.log('Login response:', response);
+
+        if (!response.token) {
+          // ako je blokiran ili nije uspeo login
+          this.errorMessage = response.message || 'Login failed.';
+          this.successMessage = '';
+          return;
+        }
+
+        // ako token postoji uloguj korisnika
+        this.authService.setAuthStatus(response.token);
         this.successMessage = 'Login successful!';
         this.errorMessage = '';
-        
-        // Navigate gde hoćeš
-        this.router.navigate(['/profile']); // ili '/dashboard'
+        this.router.navigate(['/profile']);
       },
       error: (err) => {
-        this.errorMessage = err.error?.message || 'Login failed. Check your credentials.';
+        console.log('Login error:', err);
+        this.errorMessage = err.error?.message || err.error || 'Login failed. Check your credentials.';
         this.successMessage = '';
       }
     });
   }
+
 }
