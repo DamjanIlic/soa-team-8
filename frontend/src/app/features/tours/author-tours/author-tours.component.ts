@@ -2,11 +2,9 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { jwtDecode } from 'jwt-decode';
-import { forkJoin } from 'rxjs';
 import { Checkpoint, Duration } from '../../../core/models/tour.model';
 import { TourService } from '../../../core/services/tour.service';
 
-// Lokalni tipovi sa saved flagom (sada readonly)
 interface TourCheckpoint extends Checkpoint {
   saved?: boolean;
 }
@@ -127,62 +125,26 @@ export class AuthorToursComponent implements OnInit {
 
     this.statusLoading = true;
 
-    // Save price first
+    // Update price uvek
     this.tourService.updatePrice(tourId, tour.price).subscribe({
       next: () => {
-        // Auto-calculate durations if empty
-        if ((tour.durations?.length ?? 0) === 0 && tour.distance_km) {
-          const speeds: Record<string, number> = { walk: 5, bike: 15, car: 60 };
-          tour.durations = Object.entries(speeds).map(([transport, speed]) => ({
-            transport,
-            duration: Math.ceil(tour.distance_km! / speed)
-          })) as TourDuration[];
+        // Samo status menjamo, durations i checkpoints su readonly
+        const finish = () => {
+          this.loadAuthorTours();
+          this.selectedTour = null;
+          this.statusLoading = false;
+        };
+
+        if (newStatus === 'published') {
+          this.tourService.publishTour(tourId).subscribe({ next: finish, error: this.handleError });
+        } else if (newStatus === 'archived') {
+          this.tourService.archiveTour(tourId).subscribe({ next: finish, error: this.handleError });
+        } else if (newStatus === 'draft') {
+          // već se setuje gore
+          finish();
+        } else {
+          finish();
         }
-
-        // Only send durations that aren't saved yet (checkpoint-i se više ne dodaju)
-        const durationRequests = (tour.durations ?? [])
-          .filter(d => !d.saved)
-          .map(d => this.tourService.addDuration(tourId, d));
-
-        forkJoin([...durationRequests]).subscribe({
-          next: () => {
-            (tour.durations ?? []).forEach(d => d.saved = true);
-
-            // Handle status update
-            if (newStatus === 'published') {
-              this.tourService.publishTour(tourId).subscribe({
-                next: () => {
-                  this.loadAuthorTours();
-                  this.selectedTour = null;
-                  this.statusLoading = false;
-                },
-                error: (err) => {
-                  console.error('Failed to publish tour:', err);
-                  alert(err.error || 'Publish failed');
-                  this.statusLoading = false;
-                }
-              });
-            } else if (newStatus === 'archived') {
-              this.tourService.archiveTour(tourId).subscribe({
-                next: () => {
-                  this.loadAuthorTours();
-                  this.selectedTour = null;
-                  this.statusLoading = false;
-                },
-                error: (err) => {
-                  console.error('Failed to archive tour:', err);
-                  alert(err.error || 'Archive failed');
-                  this.statusLoading = false;
-                }
-              });
-            }
-          },
-          error: (err) => {
-            console.error('Failed to save durations:', err);
-            alert('Failed to save durations before publishing.');
-            this.statusLoading = false;
-          }
-        });
       },
       error: (err) => {
         alert(err.error || 'Failed to set price');
@@ -190,6 +152,12 @@ export class AuthorToursComponent implements OnInit {
       }
     });
   }
+
+  private handleError = (err: any) => {
+    console.error('Status change failed:', err);
+    alert(err.error || 'Failed to change status');
+    this.statusLoading = false;
+  };
 
   formatPrice(price: number): string {
     return `$${price.toFixed(2)}`;
