@@ -1,7 +1,7 @@
 <div class="p-4 max-w-3xl mx-auto">
-  <h2 class="text-2xl font-bold mb-4">Add Checkpoints</h2>
+  <h2 class="text-2xl font-bold mb-4">Add Checkpoints & Durations</h2>
 
-  <!-- MAPA -->
+  <!-- Map -->
   <div class="mb-4 border rounded h-96 overflow-hidden">
     <xp-map 
       [addedCheckpointCollection]="checkpoints"
@@ -14,18 +14,27 @@
 
   <p class="mt-2 text-gray-600">Trenutna dužina ture: {{ tourDistanceKm | number:'1.2-2' }} km</p>
 
-  <!-- Transport Dropdown -->
-  <div class="mb-4">
-    <label class="block font-medium">Select Transport</label>
+  <!-- Transport + Minutes -->
+  <div class="mb-4 flex items-center gap-2">
+    <label class="font-medium">Transport:</label>
     <select [(ngModel)]="selectedTransport" (change)="onTransportChange(selectedTransport)"
-            class="w-full border rounded px-2 py-1">
+            class="border rounded px-2 py-1">
       <option [ngValue]="TransportType.Walk">Walk</option>
       <option [ngValue]="TransportType.Bike">Bike</option>
       <option [ngValue]="TransportType.Car">Car</option>
     </select>
+    <span class="ml-2">Minutes: {{ minutes }}</span>
+    <button type="button" (click)="addDuration()" class="ml-2 px-3 py-1 bg-green-600 text-white rounded">+ Add</button>
   </div>
 
-  <!-- FORMA -->
+  <!-- Display Durations -->
+  <div class="mb-4 flex gap-2 flex-wrap">
+    <span *ngFor="let d of durations" class="px-2 py-1 bg-yellow-100 rounded">
+      {{ d.transport | titlecase }}: {{ d.minutes }} min
+    </span>
+  </div>
+
+  <!-- Checkpoint Form -->
   <form [formGroup]="checkpointForm" class="space-y-4">
     <div>
       <label class="block font-medium">Name</label>
@@ -49,7 +58,7 @@
 
     <div>
       <label class="block font-medium">Image URL</label>
-      <input type="text" formControlName="image_url" placeholder="https://example.com/image.jpg" class="w-full border rounded px-2 py-1" />
+      <input type="text" formControlName="image_url" class="w-full border rounded px-2 py-1" placeholder="https://example.com/image.jpg"/>
     </div>
 
     <button type="button" (click)="addCheckpoint()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
@@ -57,6 +66,7 @@
     </button>
   </form>
 
+  <!-- Finalize Tour -->
   <div class="mt-6">
     <button (click)="finalizeTour()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
       Finalize Tour
@@ -64,23 +74,5 @@
     <button (click)="cancelTour()" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 ml-2">
       Cancel
     </button>
-  </div>
-
-  <div class="mt-6">
-    <h3 class="font-bold text-xl">Added Checkpoints</h3>
-    <ul>
-      <li *ngFor="let c of checkpoints">
-        {{ c.name }} - {{ c.description }} - Lat: {{ c.latitude }}, Lng: {{ c.longitude }}
-      </li>
-    </ul>
-  </div>
-
-  <div class="mt-6">
-    <h3 class="font-bold text-xl">Durations (by Transport)</h3>
-    <ul>
-      <li *ngFor="let d of durations">
-        {{ d.transport | titlecase }}: {{ d.minutes }} min
-      </li>
-    </ul>
   </div>
 </div>

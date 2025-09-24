@@ -23,6 +23,8 @@ export enum TransportType {
 export class AddTourCheckpointsComponent implements OnInit {
   selectedTransport: TransportType = TransportType.Walk;
   TransportType = TransportType;
+  minutes = 0;
+
   tour: Tour | null = null;
   tourId!: string;
   checkpoints: Checkpoint[] = [];
@@ -66,13 +68,10 @@ export class AddTourCheckpointsComponent implements OnInit {
     };
 
     this.saving = true;
-
     this.tourService.addKeyPoint(this.tourId, checkpoint).subscribe({
       next: (savedCheckpoint) => {
-        // Dodaj checkpoint u listu i update referencu za mapu
         this.checkpoints = [...this.checkpoints, savedCheckpoint];
         this.updateMapMarkers();
-        this.calculateDurations();
         this.resetForm();
         this.saving = false;
       },
@@ -87,61 +86,43 @@ export class AddTourCheckpointsComponent implements OnInit {
     if (index >= 0 && index < this.checkpoints.length) {
       this.checkpoints.splice(index, 1);
       this.updateMapMarkers();
-      this.calculateDurations();
     }
   }
 
   updateMapMarkers(): void {
     if (this.mapComponent) {
-      // Kreira novu referencu da Angular detektuje promenu
       this.mapComponent.addedCheckpointCollection = [...this.checkpoints];
-    }
-  }
-
-  calculateDurations(): void {
-    if (!this.tourDistanceKm) return;
-
-    const speedMap: Record<TransportType, number> = {
-      [TransportType.Walk]: 5,
-      [TransportType.Bike]: 15,
-      [TransportType.Car]: 60
-    };
-
-    const durationMinutes = Math.ceil((this.tourDistanceKm / speedMap[this.selectedTransport]) * 60);
-
-    // Ispravka: koristi 'minutes' umesto 'duration' i 'transport_type' umesto 'transport'
-    const durationData = { 
-      transport: this.selectedTransport, 
-      minutes: durationMinutes 
-    };
-
-    const existingIndex = this.durations.findIndex(d => d.transport === this.selectedTransport);
-    if (existingIndex >= 0) {
-      this.durations[existingIndex].minutes = durationMinutes;
-    } else {
-      this.durations.push(durationData);
-    }
-
-    // Update tour durations u backend-u
-    if (this.tourId) {
-      const durationObservables = this.durations.map(d => 
-        this.tourService.addDuration(this.tourId, {
-          transport: d.transport,
-          minutes: d.minutes
-        })
-      );
-      
-      // Ispravka: koristi forkJoin umesto deprecated toPromise()
-      forkJoin(durationObservables).subscribe({
-        next: () => console.log('Durations updated', this.durations),
-        error: (err) => console.error('Failed to update durations', err)
-      });
     }
   }
 
   onTransportChange(transport: TransportType) {
     this.selectedTransport = transport;
-    this.calculateDurations();
+    this.updateMinutes();
+  }
+
+  updateMinutes() {
+    const speedMap: Record<TransportType, number> = {
+      [TransportType.Walk]: 5,
+      [TransportType.Bike]: 15,
+      [TransportType.Car]: 60
+    };
+    const speed = speedMap[this.selectedTransport] ?? 1;
+    this.minutes = Math.ceil((this.tourDistanceKm / speed) * 60);
+  }
+
+  addDuration() {
+    if (this.durations.some(d => d.transport === this.selectedTransport)) return;
+    this.durations.push({ transport: this.selectedTransport, minutes: this.minutes });
+    this.syncDurationsToBackend();
+  }
+
+  syncDurationsToBackend() {
+    if (!this.tourId) return;
+    const observables = this.durations.map(d => this.tourService.addDuration(this.tourId, d));
+    forkJoin(observables).subscribe({
+      next: () => console.log('Durations updated', this.durations),
+      error: (err) => console.error('Failed to update durations', err)
+    });
   }
 
   onLocationSelected(location: { lat: number; lng: number }) {
@@ -155,16 +136,23 @@ export class AddTourCheckpointsComponent implements OnInit {
 
   onRouteDistanceUpdated(distanceKm: number) {
     this.tourDistanceKm = distanceKm;
-    this.calculateDurations();
+    this.updateMinutes();
   }
 
   toggleHelpModal() { this.isHelpModalOpen = !this.isHelpModalOpen; }
 
   finalizeTour(): void {
-    if (!this.tour || this.checkpoints.length < 2) return;
+    if (!this.tour || this.checkpoints.length < 2) {
+      alert('Tour must have at least 2 checkpoints before finalizing.');
+      return;
+    }
 
+    // Update distance first
     this.tourService.updateDistance(this.tourId, this.tourDistanceKm).subscribe({
-      next: () => this.router.navigate(['/tours/author-tours']),
+      next: () => {
+        // Optionally navigate or show success message
+        this.router.navigate(['/tours/author-tours']);
+      },
       error: (err) => console.error('Failed to finalize tour:', err)
     });
   }
