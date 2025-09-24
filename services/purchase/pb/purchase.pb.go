@@ -7,12 +7,12 @@
 package pb
 
 import (
+	_ "google.golang.org/genproto/googleapis/api/annotations"
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
-
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (
@@ -370,7 +370,7 @@ var File_purchase_proto protoreflect.FileDescriptor
 
 const file_purchase_proto_rawDesc = "" +
 	"\n" +
-	"\x0epurchase.proto\x12\bpurchase\"*\n" +
+	"\x0epurchase.proto\x12\bpurchase\x1a\x1cgoogle/api/annotations.proto\"*\n" +
 	"\x0fCheckoutRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\"a\n" +
 	"\x10CheckoutResponse\x123\n" +
@@ -395,10 +395,10 @@ const file_purchase_proto_rawDesc = "" +
 	"tourist_id\x18\x02 \x01(\tR\ttouristId\x12\x14\n" +
 	"\x05token\x18\x03 \x01(\tR\x05token\x12\x1d\n" +
 	"\n" +
-	"created_at\x18\x04 \x01(\tR\tcreatedAt2\x94\x01\n" +
-	"\x0fPurchaseService\x12A\n" +
-	"\bCheckout\x12\x19.purchase.CheckoutRequest\x1a\x1a.purchase.CheckoutResponse\x12>\n" +
-	"\aGetCart\x12\x18.purchase.GetCartRequest\x1a\x19.purchase.GetCartResponseB\x06Z\x04./pbb\x06proto3"
+	"created_at\x18\x04 \x01(\tR\tcreatedAt2\xc6\x01\n" +
+	"\x0fPurchaseService\x12`\n" +
+	"\bCheckout\x12\x19.purchase.CheckoutRequest\x1a\x1a.purchase.CheckoutResponse\"\x1d\x82\xd3\xe4\x93\x02\x17:\x01*\"\x12/api/cart/checkout\x12Q\n" +
+	"\aGetCart\x12\x18.purchase.GetCartRequest\x1a\x19.purchase.GetCartResponse\"\x11\x82\xd3\xe4\x93\x02\v\x12\t/api/cartB\x06Z\x04./pbb\x06proto3"
 
 var (
 	file_purchase_proto_rawDescOnce sync.Once

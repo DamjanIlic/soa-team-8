@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net"
@@ -15,7 +16,9 @@ import (
 	"purchase/service"
 
 	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	grpcServer "google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -72,19 +75,21 @@ func main() {
 		ItemRepo:  itemRepo,
 	}
 
-	// handlers
+	// handlers (samo za ne-RPC endpoints)
 	cartHandler := &handler.CartHandler{CartService: cartService}
 	tokenHandler := &handler.TokenHandler{TokenService: tokenService}
 
-	// gRPC server - dodano CartService
+	// gRPC server
 	grpcPurchaseServer := &grpc.PurchaseGRPCServer{
 		TokenService: tokenService,
-		CartService:  cartService, // DODANO
+		CartService:  cartService,
 	}
 
-	// Pokretanje oba servera
+	// Pokretanje gRPC servera u goroutine
 	go startGRPCServer(grpcPurchaseServer)
-	startHTTPServer(cartHandler, tokenHandler)
+
+	// Pokretanje HTTP servera sa gRPC-Gateway
+	startHTTPServerWithGateway(cartHandler, tokenHandler)
 }
 
 func startGRPCServer(purchaseServer *grpc.PurchaseGRPCServer) {
@@ -104,33 +109,52 @@ func startGRPCServer(purchaseServer *grpc.PurchaseGRPCServer) {
 	}
 }
 
-func startHTTPServer(cartHandler *handler.CartHandler, tokenHandler *handler.TokenHandler) {
+func startHTTPServerWithGateway(cartHandler *handler.CartHandler, tokenHandler *handler.TokenHandler) {
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	// gRPC-Gateway mux
+	gwMux := runtime.NewServeMux()
+	opts := []grpcServer.DialOption{grpcServer.WithTransportCredentials(insecure.NewCredentials())}
+
+	// Registruj gRPC-Gateway
+	if err := pb.RegisterPurchaseServiceHandlerFromEndpoint(ctx, gwMux, "localhost:50051", opts); err != nil {
+		log.Fatalf("Failed to register gateway: %v", err)
+	}
+
+	// Gorilla mux za ostale endpoints
 	router := mux.NewRouter().StrictSlash(true)
 
-	// JWT middleware
+	// JWT middleware za sve API rute
 	api := router.PathPrefix("/api").Subrouter()
 	api.Use(middleware.JWTMiddleware)
 
+	// Health check endpoint
 	router.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Purchase service is alive 🚀"))
 	}).Methods("GET")
 
-	// Cart endpoints
+	// RPC endpoints se sada serviraju preko gRPC-Gateway
+	// /api/cart (GetCart) - automatski preko gRPC
+	// /api/cart/checkout (Checkout) - automatski preko gRPC
+
+	// Ostali HTTP endpoints (koji nisu RPC)
 	api.HandleFunc("/cart", cartHandler.CreateCart).Methods("POST")
-	api.HandleFunc("/cart", cartHandler.GetCart).Methods("GET")
 	api.HandleFunc("/cart/items", cartHandler.AddItem).Methods("POST")
 	api.HandleFunc("/cart/items/{itemId}", cartHandler.RemoveItem).Methods("DELETE")
 	api.HandleFunc("/cart/total", cartHandler.GetTotal).Methods("GET")
 
 	// Token endpoints
-	api.HandleFunc("/cart/checkout", tokenHandler.Checkout).Methods("POST")
-	api.HandleFunc("/cart/tokens/purchased", tokenHandler.GetPurchasedTours).Methods("GET")
 	api.HandleFunc("/cart/tokens/purchased", tokenHandler.GetPurchasedTours).Methods("GET")
 	api.HandleFunc("/cart/tokens/{tokenId}/executed", tokenHandler.MarkAsExecuted).Methods("PUT")
 	api.HandleFunc("/cart/tokens/{tokenId}/reviewed", tokenHandler.MarkAsReviewed).Methods("PUT")
 	api.HandleFunc("/cart/tokens/tour/{tourId}", tokenHandler.GetTokenByTouristAndTour).Methods("GET")
 
+	// Kombinuj Gorilla router sa gRPC-Gateway
+	router.PathPrefix("/").Handler(gwMux)
+
 	port := getEnv("PORT", "8080")
-	log.Printf("HTTP Purchase service starting on :%s 🚀\n", port)
+	log.Printf("HTTP Purchase service with gRPC-Gateway starting on :%s 🚀\n", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
 }
