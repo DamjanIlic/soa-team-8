@@ -14,6 +14,17 @@
 
   <p class="mt-2 text-gray-600">Trenutna dužina ture: {{ tourDistanceKm | number:'1.2-2' }} km</p>
 
+  <!-- Transport Dropdown -->
+  <div class="mb-4">
+    <label class="block font-medium">Select Transport</label>
+    <select [(ngModel)]="selectedTransport" (change)="onTransportChange(selectedTransport)"
+            class="w-full border rounded px-2 py-1">
+      <option [ngValue]="TransportType.Walk">Walk</option>
+      <option [ngValue]="TransportType.Bike">Bike</option>
+      <option [ngValue]="TransportType.Car">Car</option>
+    </select>
+  </div>
+
   <!-- FORMA -->
   <form [formGroup]="checkpointForm" class="space-y-4">
     <div>
@@ -60,6 +71,15 @@
     <ul>
       <li *ngFor="let c of checkpoints">
         {{ c.name }} - {{ c.description }} - Lat: {{ c.latitude }}, Lng: {{ c.longitude }}
+      </li>
+    </ul>
+  </div>
+
+  <div class="mt-6">
+    <h3 class="font-bold text-xl">Durations (by Transport)</h3>
+    <ul>
+      <li *ngFor="let d of durations">
+        {{ d.transport | titlecase }}: {{ d.duration }} min
       </li>
     </ul>
   </div>

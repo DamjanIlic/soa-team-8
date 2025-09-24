@@ -3,10 +3,17 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { jwtDecode } from 'jwt-decode';
 import { forkJoin } from 'rxjs';
+import { Checkpoint, Duration } from '../../../core/models/tour.model';
 import { TourService } from '../../../core/services/tour.service';
 
-// import Checkpoint and Duration from the shared model
-import { Checkpoint, Duration } from '../../../core/models/tour.model';
+// Lokalni tipovi sa saved flagom (sada readonly)
+interface TourCheckpoint extends Checkpoint {
+  saved?: boolean;
+}
+
+interface TourDuration extends Duration {
+  saved?: boolean;
+}
 
 interface Tour {
   id: string;
@@ -18,8 +25,8 @@ interface Tour {
   status: 'draft' | 'published' | 'archived';
   price: number;
   distance_km?: number;
-  checkpoints?: Checkpoint[];
-  durations?: Duration[];
+  checkpoints?: TourCheckpoint[];
+  durations?: TourDuration[];
   updated_at?: string;
 }
 
@@ -65,8 +72,8 @@ export class AuthorToursComponent implements OnInit {
           .filter(t => t.author_id === this.userId)
           .map(t => ({
             ...t,
-            checkpoints: t.checkpoints ?? [],
-            durations: t.durations ?? [],
+            checkpoints: (t.checkpoints ?? []).map(kp => ({ ...kp })) as TourCheckpoint[],
+            durations: (t.durations ?? []).map(d => ({ ...d })) as TourDuration[],
             price: t.price ?? 0
           }));
         this.loading = false;
@@ -79,8 +86,13 @@ export class AuthorToursComponent implements OnInit {
     });
   }
 
-  editTourStatus(tour: Tour): void { this.selectedTour = { ...tour }; }
-  cancelEditStatus(): void { this.selectedTour = null; }
+  editTourStatus(tour: Tour): void {
+    this.selectedTour = { ...tour };
+  }
+
+  cancelEditStatus(): void {
+    this.selectedTour = null;
+  }
 
   saveStatus(newStatus?: 'published' | 'archived' | 'draft'): void {
     if (!this.selectedTour) return;
@@ -88,18 +100,21 @@ export class AuthorToursComponent implements OnInit {
     const tour = this.selectedTour;
     const tourId = tour.id;
 
+    // Reactivate archived to draft
     if (newStatus === 'draft' && tour.status === 'archived') {
       tour.status = 'draft';
       this.selectedTour = { ...tour };
       return;
     }
 
+    // Validate price
     tour.price = Number(tour.price);
     if (isNaN(tour.price) || tour.price <= 0) {
       alert('Price must be greater than 0.');
       return;
     }
 
+    // Validate required fields
     if (!tour.name || !tour.description || !tour.difficulty || !tour.tags) {
       alert('Fill in all required fields: name, description, difficulty, tags.');
       return;
@@ -112,25 +127,28 @@ export class AuthorToursComponent implements OnInit {
 
     this.statusLoading = true;
 
+    // Save price first
     this.tourService.updatePrice(tourId, tour.price).subscribe({
       next: () => {
+        // Auto-calculate durations if empty
         if ((tour.durations?.length ?? 0) === 0 && tour.distance_km) {
           const speeds: Record<string, number> = { walk: 5, bike: 15, car: 60 };
           tour.durations = Object.entries(speeds).map(([transport, speed]) => ({
             transport,
             duration: Math.ceil(tour.distance_km! / speed)
-          }));
+          })) as TourDuration[];
         }
 
-        const checkpointRequests = (tour.checkpoints ?? []).map(kp =>
-          this.tourService.addKeyPoint(tourId, kp)
-        );
-        const durationRequests = (tour.durations ?? []).map(d =>
-          this.tourService.addDuration(tourId, d)
-        );
+        // Only send durations that aren't saved yet (checkpoint-i se više ne dodaju)
+        const durationRequests = (tour.durations ?? [])
+          .filter(d => !d.saved)
+          .map(d => this.tourService.addDuration(tourId, d));
 
-        forkJoin([...checkpointRequests, ...durationRequests]).subscribe({
+        forkJoin([...durationRequests]).subscribe({
           next: () => {
+            (tour.durations ?? []).forEach(d => d.saved = true);
+
+            // Handle status update
             if (newStatus === 'published') {
               this.tourService.publishTour(tourId).subscribe({
                 next: () => {
@@ -160,8 +178,8 @@ export class AuthorToursComponent implements OnInit {
             }
           },
           error: (err) => {
-            console.error('Failed to save keypoints/durations:', err);
-            alert('Failed to save keypoints or durations before publishing.');
+            console.error('Failed to save durations:', err);
+            alert('Failed to save durations before publishing.');
             this.statusLoading = false;
           }
         });
@@ -173,7 +191,9 @@ export class AuthorToursComponent implements OnInit {
     });
   }
 
-  formatPrice(price: number): string { return `$${price.toFixed(2)}`; }
+  formatPrice(price: number): string {
+    return `$${price.toFixed(2)}`;
+  }
 
   getStatusColor(status: string): string {
     switch (status.toLowerCase()) {
@@ -193,7 +213,11 @@ export class AuthorToursComponent implements OnInit {
     }
   }
 
-  parseTags(tags: string): string[] { return tags ? tags.split(',').map(t => t.trim()) : []; }
+  parseTags(tags: string): string[] {
+    return tags ? tags.split(',').map(t => t.trim()) : [];
+  }
 
-  trackByTourId(index: number, tour: Tour) { return tour.id; }
+  trackByTourId(index: number, tour: Tour) {
+    return tour.id;
+  }
 }
