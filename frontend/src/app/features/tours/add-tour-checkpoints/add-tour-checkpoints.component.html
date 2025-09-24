@@ -4,15 +4,16 @@
   <!-- Map -->
   <div class="mb-4 border rounded h-96 overflow-hidden">
     <xp-map 
+      #map
       [addedCheckpointCollection]="checkpoints"
       (locationSelected)="onLocationSelected($event)"
-      (checkpointRemoved)="handleCheckpointRemoved($event)"
+      (checkpointRemoved)="deleteCheckpoint($event)"
       (routeDistanceKm)="onRouteDistanceUpdated($event)"
       class="w-full h-full">
     </xp-map>
   </div>
 
-  <p class="mt-2 text-gray-600">Trenutna dužina ture: {{ tourDistanceKm | number:'1.2-2' }} km</p>
+  <p class="mt-2 text-gray-600">Current tour length: {{ tourDistanceKm | number:'1.2-2' }} km</p>
 
   <!-- Transport + Minutes -->
   <div class="mb-4 flex items-center gap-2">
@@ -27,7 +28,7 @@
     <button type="button" (click)="addDuration()" class="ml-2 px-3 py-1 bg-green-600 text-white rounded">+ Add</button>
   </div>
 
-  <!-- Display Durations -->
+  <!-- Durations Display -->
   <div class="mb-4 flex gap-2 flex-wrap">
     <span *ngFor="let d of durations" class="px-2 py-1 bg-yellow-100 rounded">
       {{ d.transport | titlecase }}: {{ d.minutes }} min
@@ -62,17 +63,31 @@
     </div>
 
     <button type="button" (click)="addCheckpoint()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-      Add Checkpoint
+      {{ editingCheckpointIndex !== null ? 'Update Checkpoint' : 'Add Checkpoint' }}
     </button>
   </form>
 
-  <!-- Finalize Tour -->
+  <!-- Checkpoints List -->
   <div class="mt-6">
-    <button (click)="finalizeTour()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-      Finalize Tour
-    </button>
-    <button (click)="cancelTour()" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 ml-2">
-      Cancel
-    </button>
+    <h3 class="text-xl font-semibold mb-2">Checkpoints</h3>
+    <ul class="space-y-2">
+      <li *ngFor="let cp of checkpoints; let i = index" class="flex justify-between items-center border p-2 rounded">
+        <div>
+          <p class="font-medium">{{ cp.name }}</p>
+          <p class="text-gray-600 text-sm">{{ cp.description }}</p>
+          <p class="text-gray-500 text-sm">Lat: {{ cp.latitude }}, Lng: {{ cp.longitude }}</p>
+        </div>
+        <div class="flex gap-2">
+          <button type="button" (click)="editCheckpoint(i)" class="px-2 py-1 bg-yellow-400 text-black rounded hover:bg-yellow-500">Edit</button>
+          <button type="button" (click)="deleteCheckpoint(i)" class="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700">Delete</button>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Finalize Tour -->
+  <div class="mt-6 flex gap-2">
+    <button (click)="finalizeTour()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Finalize Tour</button>
+    <button (click)="cancelTour()" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">Cancel</button>
   </div>
 </div>

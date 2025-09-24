@@ -14,13 +14,14 @@ export class TourService {
   constructor(private http: HttpClient) { }
 
   private getAuthHeaders(): HttpHeaders {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('access_token') || '';
     return new HttpHeaders({
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
     });
   }
 
+  // ---- Tours ----
   createTour(tour: TourRequest): Observable<TourResponse> {
     return this.http.post<TourResponse>(this.apiUrl, tour, { headers: this.getAuthHeaders() });
   }
@@ -33,8 +34,8 @@ export class TourService {
     return this.http.get<Tour[]>(this.apiUrl, { headers: this.getAuthHeaders() });
   }
 
-  getToursByAuthor(authorId: string): Observable<Tour[]> {
-    return this.http.get<Tour[]>(`${this.apiUrl}/authors/${authorId}`, { headers: this.getAuthHeaders() });
+  getAuthorTours(): Observable<Tour[]> {
+    return this.http.get<Tour[]>(`${this.apiUrl}/author-tours`, { headers: this.getAuthHeaders() });
   }
 
   publishTour(id: string): Observable<TourResponse> {
@@ -49,34 +50,42 @@ export class TourService {
     return this.http.post<TourResponse>(`${this.apiUrl}/${id}/reactivate`, {}, { headers: this.getAuthHeaders() });
   }
 
-  // Dodavanje jednog keypointa
-  addKeyPoint(tourId: string, keyPoint: Checkpoint): Observable<Checkpoint> {
-    return this.http.post<Checkpoint>(`${this.apiUrl}/${tourId}/keypoints`, keyPoint, { headers: this.getAuthHeaders() });
-  }
-
-  // Dodavanje jednog duration-a
-  addDuration(tourId: string, duration: Duration): Observable<Duration> {
-    return this.http.post<Duration>(`${this.apiUrl}/${tourId}/durations`, duration, { headers: this.getAuthHeaders() });
-  }
-
-  getKeyPointsByTour(tourId: string): Observable<Checkpoint[]> {
-    return this.http.get<Checkpoint[]>(`${this.apiUrl}/${tourId}/keypoints`, { headers: this.getAuthHeaders() });
-  }
-
-  getAuthorTours(): Observable<Tour[]> {
-    return this.http.get<Tour[]>(`${this.apiUrl}/author-tours`, { headers: this.getAuthHeaders() });
-  }
-
-  // 🔥 NOVO – update distance
   updateDistance(tourId: string, distanceKm: number): Observable<Tour> {
-    return this.http.put<Tour>(`${this.apiUrl}/${tourId}/distance`,
+    return this.http.put<Tour>(
+      `${this.apiUrl}/${tourId}/distance`,
       { distance_km: distanceKm },
       { headers: this.getAuthHeaders() }
     );
   }
 
   updatePrice(tourId: string, price: number): Observable<Tour> {
-    return this.http.put<Tour>(`${this.apiUrl}/${tourId}/price`, { price }, { headers: this.getAuthHeaders() });
+    return this.http.put<Tour>(
+      `${this.apiUrl}/${tourId}/price`,
+      { price },
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  // ---- KeyPoints ----
+  getKeyPointsByTour(tourId: string): Observable<Checkpoint[]> {
+    return this.http.get<Checkpoint[]>(`${this.apiUrl}/${tourId}/keypoints`, { headers: this.getAuthHeaders() });
+  }
+
+  addKeyPoint(tourId: string, keyPoint: Checkpoint): Observable<Checkpoint> {
+    return this.http.post<Checkpoint>(`${this.apiUrl}/${tourId}/keypoints`, keyPoint, { headers: this.getAuthHeaders() });
+  }
+
+  updateKeyPoint(keyPointId: string, keyPoint: Checkpoint): Observable<Checkpoint> {
+    return this.http.put<Checkpoint>(`${this.apiUrl}/keypoints/${keyPointId}`, keyPoint, { headers: this.getAuthHeaders() });
+  }
+
+  deleteKeyPoint(keyPointId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/keypoints/${keyPointId}`, { headers: this.getAuthHeaders() });
+  }
+
+  // ---- Durations ----
+  addDuration(tourId: string, duration: Duration): Observable<Duration> {
+    return this.http.post<Duration>(`${this.apiUrl}/${tourId}/durations`, duration, { headers: this.getAuthHeaders() });
   }
 
 }

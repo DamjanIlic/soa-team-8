@@ -29,9 +29,10 @@ export class AddTourCheckpointsComponent implements OnInit {
   tourId!: string;
   checkpoints: Checkpoint[] = [];
   durations: Duration[] = [];
-  isHelpModalOpen = false;
   saving = false;
   tourDistanceKm = 0;
+
+  editingCheckpointIndex: number | null = null;
 
   @ViewChild('map', { static: false }) mapComponent!: MapComponent;
 
@@ -50,10 +51,22 @@ export class AddTourCheckpointsComponent implements OnInit {
     if (state?.tour) {
       this.tour = state.tour;
       this.tourId = state.tour.id!;
+      this.loadKeypoints();
     } else {
       console.error('No tour data found');
       this.router.navigate(['/addNewTour']);
     }
+  }
+
+  loadKeypoints(): void {
+    if (!this.tourId) return;
+    this.tourService.getKeyPointsByTour(this.tourId).subscribe({
+      next: (kps) => {
+        this.checkpoints = kps || [];
+        this.updateMapMarkers();
+      },
+      error: (err) => console.error('Failed to load keypoints', err)
+    });
   }
 
   addCheckpoint(): void {
@@ -68,25 +81,63 @@ export class AddTourCheckpointsComponent implements OnInit {
     };
 
     this.saving = true;
-    this.tourService.addKeyPoint(this.tourId, checkpoint).subscribe({
-      next: (savedCheckpoint) => {
-        this.checkpoints = [...this.checkpoints, savedCheckpoint];
-        this.updateMapMarkers();
-        this.resetForm();
-        this.saving = false;
-      },
-      error: (err) => {
-        console.error('Failed to add checkpoint:', err);
-        this.saving = false;
-      }
-    });
+
+    if (this.editingCheckpointIndex !== null) {
+      const cpId = this.checkpoints[this.editingCheckpointIndex].id!;
+      this.tourService.updateKeyPoint(cpId, checkpoint).subscribe({
+        next: (updated) => {
+          this.checkpoints[this.editingCheckpointIndex!] = updated;
+          this.updateMapMarkers();
+          this.resetForm();
+          this.editingCheckpointIndex = null;
+          this.saving = false;
+        },
+        error: (err) => {
+          console.error('Failed to update checkpoint', err);
+          this.saving = false;
+        }
+      });
+    } else {
+      this.tourService.addKeyPoint(this.tourId, checkpoint).subscribe({
+        next: (saved) => {
+          this.checkpoints.push(saved);
+          this.updateMapMarkers();
+          this.resetForm();
+          this.saving = false;
+        },
+        error: (err) => {
+          console.error('Failed to add checkpoint', err);
+          this.saving = false;
+        }
+      });
+    }
   }
 
-  handleCheckpointRemoved(index: number): void {
-    if (index >= 0 && index < this.checkpoints.length) {
-      this.checkpoints.splice(index, 1);
-      this.updateMapMarkers();
-    }
+  editCheckpoint(index: number): void {
+    const cp = this.checkpoints[index];
+    this.checkpointForm.setValue({
+      name: cp.name || '',
+      description: cp.description || '',
+      latitude: cp.latitude != null ? cp.latitude.toString() : '',
+      longitude: cp.longitude != null ? cp.longitude.toString() : '',
+      image_url: cp.image_url || ''
+    });
+    this.editingCheckpointIndex = index;
+  }
+
+
+  deleteCheckpoint(index: number): void {
+    const cp = this.checkpoints[index];
+    if (!cp.id) return;
+
+    this.tourService.deleteKeyPoint(cp.id).subscribe({
+      next: () => {
+        this.checkpoints.splice(index, 1);
+        this.updateMapMarkers();
+        if (this.editingCheckpointIndex === index) this.resetForm();
+      },
+      error: (err) => console.error('Failed to delete checkpoint', err)
+    });
   }
 
   updateMapMarkers(): void {
@@ -130,7 +181,10 @@ export class AddTourCheckpointsComponent implements OnInit {
     this.checkpointForm.get('longitude')?.setValue(location.lng.toString());
   }
 
-  resetForm(): void { this.checkpointForm.reset(); }
+  resetForm(): void {
+    this.checkpointForm.reset();
+    this.editingCheckpointIndex = null;
+  }
 
   cancelTour(): void { this.router.navigate(['/addNewTour']); }
 
@@ -139,20 +193,14 @@ export class AddTourCheckpointsComponent implements OnInit {
     this.updateMinutes();
   }
 
-  toggleHelpModal() { this.isHelpModalOpen = !this.isHelpModalOpen; }
-
   finalizeTour(): void {
     if (!this.tour || this.checkpoints.length < 2) {
       alert('Tour must have at least 2 checkpoints before finalizing.');
       return;
     }
 
-    // Update distance first
     this.tourService.updateDistance(this.tourId, this.tourDistanceKm).subscribe({
-      next: () => {
-        // Optionally navigate or show success message
-        this.router.navigate(['/tours/author-tours']);
-      },
+      next: () => this.router.navigate(['/tours/author-tours']),
       error: (err) => console.error('Failed to finalize tour:', err)
     });
   }
