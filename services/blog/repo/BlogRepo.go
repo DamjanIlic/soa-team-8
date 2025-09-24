@@ -49,3 +49,17 @@ func (r *BlogRepository) Update(blog *model.Blog) error {
 	)
 	return err
 }
+
+func (r *BlogRepository) GetByUserID(userID string) ([]model.Blog, error) {
+	cursor, err := r.Collection.Find(context.TODO(), bson.M{"user_id": userID})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.TODO())
+
+	var blogs []model.Blog
+	if err = cursor.All(context.TODO(), &blogs); err != nil {
+		return nil, err
+	}
+	return blogs, nil
+}

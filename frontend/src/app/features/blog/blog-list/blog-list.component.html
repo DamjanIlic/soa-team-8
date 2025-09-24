@@ -33,6 +33,13 @@
       >
         Preporuči Blogere
       </button>
+      <button
+      class="flex-1 py-2 text-center font-medium transition-colors"
+      [ngClass]="{'bg-base-200': selectedTab==='myblogs', 'bg-base-100': selectedTab!=='myblogs'}"
+      (click)="selectedTab='myblogs'; loadMyBlogs(); showRecommendForm = false"
+      >
+      My Blogs
+    </button>
     </div>
   </div>
 
@@ -84,7 +91,7 @@
               {{ blog.content }}
             </p>
             <div class="mt-auto pt-3 text-sm flex items-center justify-between text-gray-400">
-              <span>Autor: {{blog.username}}</span>
+              <span *ngIf="selectedTab !== 'myblogs'">Autor: {{blog.username}}</span>
               <span>Napravljen: {{ blog.created_at | date: 'MM.dd.yyyy' }}</span>
             </div>
           </div>

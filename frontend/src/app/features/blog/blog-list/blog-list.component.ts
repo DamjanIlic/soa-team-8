@@ -32,7 +32,7 @@ export class BlogListComponent implements OnInit {
   blogsForUser: Blog[] = [];
   loading = false;
   error = '';
-  selectedTab: 'foryou' | 'explore' | 'recommend'= 'foryou';
+  selectedTab: 'foryou' | 'explore' | 'recommend' | 'myblogs' = 'foryou';
   showRecommendForm = false;
   recommendations: any[] = [];
   loadingRecommendations = false;
@@ -100,6 +100,33 @@ export class BlogListComponent implements OnInit {
         console.error('Greška prilikom učitavanja preporuka', err);
         this.loadingRecommendations = false;
       }
+    });
+  }
+
+  loadMyBlogs() {
+  this.selectedTab = 'myblogs';
+  this.loading = true;
+
+  // 1️⃣ Provera tokena
+  const token = localStorage.getItem('access_token');
+  if (!token) {
+    console.warn('No access token!');
+  } else {
+    console.log('Token found:', token);
+  }
+
+  this.blogService.getMyBlogs()
+    .pipe(
+      catchError(err => {
+        console.error('HTTP Error:', err); // status, message, itd.
+        this.error = 'Error fetching your blogs.';
+        return of([]);
+      })
+    )
+    .subscribe(data => {
+      console.log('Received data:', data); // sta backend vraca
+      this.blogs = data;
+      this.loading = false;
     });
   }
 
