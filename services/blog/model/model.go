@@ -16,6 +16,17 @@ type Blog struct {
 	Likes     int       `json:"likes" bson:"likes"`
 	UserID    string    `bson:"user_id"`
 }
+type BlogResponse struct {
+	ID        string    `json:"id"`
+	Title     string    `json:"title"`
+	Content   string    `json:"content"`
+	UserID    string    `json:"user_id"`
+	Username  string    `json:"username"`
+	Likes     int       `json:"likes"`
+	ImageURL  string    `json:"image_url"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
 
 func NewBlog(title, content, imageURL string) *Blog {
 	return &Blog{

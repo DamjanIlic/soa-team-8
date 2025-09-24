@@ -41,6 +41,8 @@ func initDB() *gorm.DB {
 	db.AutoMigrate(&model.KeyPoint{})
 	db.AutoMigrate(&model.Duration{})
 	db.AutoMigrate(&model.Review{})
+	db.AutoMigrate(&model.TourExecution{})
+	db.AutoMigrate(&model.KeyPointExecution{})
 
 	return db
 }
@@ -73,7 +75,10 @@ func main() {
 	}
 	reviewService := &service.ReviewService{
 		ReviewRepo: reviewRepo,
+		TourRepo:   tourRepo,
 	}
+	tourExecutionService := service.NewTourExecutionService(db)
+	tourExecutionHandler := handler.NewTourExecutionHandler(tourExecutionService)
 
 	// Handleri
 	tourHandler := &handler.TourHandler{TourService: tourService}
@@ -81,7 +86,7 @@ func main() {
 	durationHandler := &handler.DurationHandler{DurationService: durationService}
 	reviewHandler := &handler.ReviewHandler{ReviewService: reviewService}
 
-	startServer(tourHandler, keyPointHandler, durationHandler, reviewHandler)
+	startServer(tourHandler, keyPointHandler, durationHandler, reviewHandler, tourExecutionHandler)
 }
 
 func startServer(
@@ -89,6 +94,7 @@ func startServer(
 	keyPointHandler *handler.KeyPointHandler,
 	durationHandler *handler.DurationHandler,
 	reviewHandler *handler.ReviewHandler,
+	tourExecutionHandler *handler.TourExecutionHandler,
 ) {
 	router := mux.NewRouter().StrictSlash(true)
 
@@ -123,6 +129,16 @@ func startServer(
 	// Review endpoints
 	api.HandleFunc("/tours/{tourId}/reviews", reviewHandler.CreateReview).Methods("POST")
 	api.HandleFunc("/tours/{tourId}/reviews", reviewHandler.GetReviewsByTour).Methods("GET")
+	api.HandleFunc("/tours/reviews", reviewHandler.GetAllReviews).Methods("GET")
+	api.HandleFunc("/tours/reviews/guide", reviewHandler.GetReviewsForGuide).Methods("GET")
+	api.HandleFunc("/tours/reviews/my", reviewHandler.GetMyReviews).Methods("GET")
+
+	// TourExecution endpoints
+	api.HandleFunc("/tours/executions/start", tourExecutionHandler.StartTour).Methods("POST")
+	api.HandleFunc("/tours/executions/complete", tourExecutionHandler.CompleteTour).Methods("POST")
+	api.HandleFunc("/tours/executions/abandon", tourExecutionHandler.AbandonTour).Methods("POST")
+	api.HandleFunc("/tours/executions/check-keypoint", tourExecutionHandler.CheckKeyPoint).Methods("POST")
+	api.HandleFunc("/tours/executions/position", tourExecutionHandler.GetSimulatedPosition).Methods("POST")
 
 	// Update tour distance
 	api.HandleFunc("/tours/{id}/distance", tourHandler.UpdateDistance).Methods("PUT")

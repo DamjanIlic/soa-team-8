@@ -56,3 +56,15 @@ func (s *TokenService) Checkout(touristID uuid.UUID) ([]model.TourPurchaseToken,
 func (s *TokenService) GetTokensForTourist(touristID uuid.UUID) ([]model.TourPurchaseToken, error) {
 	return s.TokenRepo.GetByTourist(touristID)
 }
+
+func (s *TokenService) MarkAsExecuted(tokenID uuid.UUID) error {
+	return s.TokenRepo.MarkAsExecuted(tokenID)
+}
+
+func (s *TokenService) MarkAsReviewed(tokenID uuid.UUID) error {
+	return s.TokenRepo.MarkAsReviewed(tokenID)
+}
+
+func (s *TokenService) GetByTouristAndTour(touristID, tourID uuid.UUID) (*model.TourPurchaseToken, error) {
+	return s.TokenRepo.GetByTouristAndTour(touristID, tourID)
+}

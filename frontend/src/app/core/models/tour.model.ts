@@ -39,7 +39,7 @@ export interface TourResponse {
   difficulty: string;
   tags: string;
   status: 'draft' | 'published' | 'archived';
-  price: number;
+  price: number;  
   distance_km: number;
   durations: Duration[];
   created_at: string;
