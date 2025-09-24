@@ -21,7 +21,7 @@ export interface Duration {
   id?: string;
   tour_id?: string;
   transport: string;
-  duration: number;
+  minutes: number;
 }
 
 export interface TourRequest {

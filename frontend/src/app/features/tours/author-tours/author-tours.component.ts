@@ -10,6 +10,7 @@ interface TourCheckpoint extends Checkpoint {
 }
 
 interface TourDuration extends Duration {
+  transport: string;
   saved?: boolean;
 }
 
@@ -71,7 +72,14 @@ export class AuthorToursComponent implements OnInit {
           .map(t => ({
             ...t,
             checkpoints: (t.checkpoints ?? []).map(kp => ({ ...kp })) as TourCheckpoint[],
-            durations: (t.durations ?? []).map(d => ({ ...d })) as TourDuration[],
+            durations: Object.values(
+              (t.durations ?? []).reduce((acc: Record<string, TourDuration>, d: any) => {
+              const transport = d.transport ?? d.transport_type;
+              const duration = d.duration ?? d.minutes ?? 0;
+              acc[transport] = { ...d, transport, duration } as TourDuration;
+                return acc;
+              }, {})
+            ) as TourDuration[],
             price: t.price ?? 0
           }));
         this.loading = false;
@@ -125,10 +133,9 @@ export class AuthorToursComponent implements OnInit {
 
     this.statusLoading = true;
 
-    // Update price uvek
+    // Update price
     this.tourService.updatePrice(tourId, tour.price).subscribe({
       next: () => {
-        // Samo status menjamo, durations i checkpoints su readonly
         const finish = () => {
           this.loadAuthorTours();
           this.selectedTour = null;
@@ -140,7 +147,6 @@ export class AuthorToursComponent implements OnInit {
         } else if (newStatus === 'archived') {
           this.tourService.archiveTour(tourId).subscribe({ next: finish, error: this.handleError });
         } else if (newStatus === 'draft') {
-          // već se setuje gore
           finish();
         } else {
           finish();
