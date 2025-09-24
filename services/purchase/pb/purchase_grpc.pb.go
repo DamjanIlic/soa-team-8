@@ -2,12 +2,13 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v6.32.1
-// source: proto/purchase.proto
+// source: purchase.proto
 
 package pb
 
 import (
 	context "context"
+
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -20,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	PurchaseService_Checkout_FullMethodName = "/purchase.PurchaseService/Checkout"
+	PurchaseService_GetCart_FullMethodName  = "/purchase.PurchaseService/GetCart"
 )
 
 // PurchaseServiceClient is the client API for PurchaseService service.
@@ -27,6 +29,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PurchaseServiceClient interface {
 	Checkout(ctx context.Context, in *CheckoutRequest, opts ...grpc.CallOption) (*CheckoutResponse, error)
+	GetCart(ctx context.Context, in *GetCartRequest, opts ...grpc.CallOption) (*GetCartResponse, error)
 }
 
 type purchaseServiceClient struct {
@@ -47,11 +50,22 @@ func (c *purchaseServiceClient) Checkout(ctx context.Context, in *CheckoutReques
 	return out, nil
 }
 
+func (c *purchaseServiceClient) GetCart(ctx context.Context, in *GetCartRequest, opts ...grpc.CallOption) (*GetCartResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetCartResponse)
+	err := c.cc.Invoke(ctx, PurchaseService_GetCart_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PurchaseServiceServer is the server API for PurchaseService service.
 // All implementations must embed UnimplementedPurchaseServiceServer
 // for forward compatibility.
 type PurchaseServiceServer interface {
 	Checkout(context.Context, *CheckoutRequest) (*CheckoutResponse, error)
+	GetCart(context.Context, *GetCartRequest) (*GetCartResponse, error)
 	mustEmbedUnimplementedPurchaseServiceServer()
 }
 
@@ -64,6 +78,9 @@ type UnimplementedPurchaseServiceServer struct{}
 
 func (UnimplementedPurchaseServiceServer) Checkout(context.Context, *CheckoutRequest) (*CheckoutResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Checkout not implemented")
+}
+func (UnimplementedPurchaseServiceServer) GetCart(context.Context, *GetCartRequest) (*GetCartResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCart not implemented")
 }
 func (UnimplementedPurchaseServiceServer) mustEmbedUnimplementedPurchaseServiceServer() {}
 func (UnimplementedPurchaseServiceServer) testEmbeddedByValue()                         {}
@@ -104,6 +121,24 @@ func _PurchaseService_Checkout_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PurchaseService_GetCart_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCartRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PurchaseServiceServer).GetCart(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PurchaseService_GetCart_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PurchaseServiceServer).GetCart(ctx, req.(*GetCartRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PurchaseService_ServiceDesc is the grpc.ServiceDesc for PurchaseService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -115,7 +150,11 @@ var PurchaseService_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "Checkout",
 			Handler:    _PurchaseService_Checkout_Handler,
 		},
+		{
+			MethodName: "GetCart",
+			Handler:    _PurchaseService_GetCart_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "proto/purchase.proto",
+	Metadata: "purchase.proto",
 }

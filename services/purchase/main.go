@@ -76,9 +76,10 @@ func main() {
 	cartHandler := &handler.CartHandler{CartService: cartService}
 	tokenHandler := &handler.TokenHandler{TokenService: tokenService}
 
-	// gRPC server
+	// gRPC server - dodano CartService
 	grpcPurchaseServer := &grpc.PurchaseGRPCServer{
 		TokenService: tokenService,
+		CartService:  cartService, // DODANO
 	}
 
 	// Pokretanje oba servera

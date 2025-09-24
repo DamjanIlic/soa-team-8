@@ -6,6 +6,7 @@ option go_package = "./pb";
 
 service PurchaseService {
   rpc Checkout(CheckoutRequest) returns (CheckoutResponse);
+  rpc GetCart(GetCartRequest) returns (GetCartResponse);
 }
 
 message CheckoutRequest {
@@ -15,6 +16,24 @@ message CheckoutRequest {
 message CheckoutResponse {
   repeated TourPurchaseToken tokens = 1;
   string message = 2;
+}
+
+message GetCartRequest {
+  string user_id = 1;
+}
+
+message GetCartResponse {
+  string id = 1;
+  string tourist_id = 2;
+  repeated CartItem items = 3;
+  double total = 4;
+}
+
+message CartItem {
+  string id = 1;
+  string tour_id = 2;
+  string name = 3;
+  double price = 4;
 }
 
 message TourPurchaseToken {
