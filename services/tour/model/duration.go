@@ -15,9 +15,17 @@ const (
 )
 
 type Duration struct {
-	ID            uuid.UUID     `gorm:"type:uuid;default:uuid_generate_v4()" json:"id"`
+	ID            uuid.UUID     `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
 	TourID        uuid.UUID     `json:"tour_id"`
 	TransportType TransportType `json:"transport_type"`
 	Minutes       int           `json:"minutes"`
 	CreatedAt     time.Time     `json:"created_at"`
+}
+
+type DurationResponse struct {
+	ID            string    `json:"id"`
+	TourID        string    `json:"tour_id"`
+	TransportType string    `json:"transport_type"`
+	Minutes       int       `json:"minutes"`
+	CreatedAt     time.Time `json:"created_at"`
 }

@@ -2,7 +2,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Checkpoint } from '../models/checkpoint.model';
-import { Tour, TourRequest, TourResponse } from '../models/tour.model';
+import { Duration, Tour, TourRequest, TourResponse } from '../models/tour.model';
 
 @Injectable({
   providedIn: 'root'
@@ -54,6 +54,11 @@ export class TourService {
     return this.http.post<Checkpoint>(`${this.apiUrl}/${tourId}/keypoints`, keyPoint, { headers: this.getAuthHeaders() });
   }
 
+  // Dodavanje jednog duration-a
+  addDuration(tourId: string, duration: Duration): Observable<Duration> {
+    return this.http.post<Duration>(`${this.apiUrl}/${tourId}/durations`, duration, { headers: this.getAuthHeaders() });
+  }
+
   getKeyPointsByTour(tourId: string): Observable<Checkpoint[]> {
     return this.http.get<Checkpoint[]>(`${this.apiUrl}/${tourId}/keypoints`, { headers: this.getAuthHeaders() });
   }
@@ -69,4 +74,9 @@ export class TourService {
       { headers: this.getAuthHeaders() }
     );
   }
+
+  updatePrice(tourId: string, price: number): Observable<Tour> {
+    return this.http.put<Tour>(`${this.apiUrl}/${tourId}/price`, { price }, { headers: this.getAuthHeaders() });
+  }
+
 }

@@ -1,22 +1,31 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { Checkpoint } from '../../../core/models/checkpoint.model';
-import { Tour } from '../../../core/models/tour.model';
+import { Duration, Tour } from '../../../core/models/tour.model';
 import { TourService } from '../../../core/services/tour.service';
 import { MapComponent } from '../../../shared/map/map.component';
+
+export enum TransportType {
+  Walk = 'walk',
+  Bike = 'bike',
+  Car = 'car'
+}
 
 @Component({
   selector: 'xp-add-tour-checkpoints',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, MapComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, MapComponent],
   templateUrl: './add-tour-checkpoints.component.html'
 })
 export class AddTourCheckpointsComponent implements OnInit {
+  selectedTransport: TransportType = TransportType.Walk;
+  TransportType = TransportType;
   tour: Tour | null = null;
   tourId!: string;
   checkpoints: Checkpoint[] = [];
+  durations: Duration[] = [];
   isHelpModalOpen = false;
   saving = false;
   tourDistanceKm = 0;
@@ -38,7 +47,6 @@ export class AddTourCheckpointsComponent implements OnInit {
     if (state?.tour) {
       this.tour = state.tour;
       this.tourId = state.tour.id!;
-      console.log('Loaded tour ID:', this.tourId);
     } else {
       console.error('No tour data found');
       this.router.navigate(['/addNewTour']);
@@ -46,12 +54,7 @@ export class AddTourCheckpointsComponent implements OnInit {
   }
 
   addCheckpoint(): void {
-    console.log('Add checkpoint clicked');
-
-    if (this.checkpointForm.invalid || !this.tourId) {
-      console.warn('Form invalid or tourId missing');
-      return;
-    }
+    if (this.checkpointForm.invalid || !this.tourId) return;
 
     const checkpoint: Checkpoint = {
       name: this.checkpointForm.value.name!.trim(),
@@ -63,12 +66,12 @@ export class AddTourCheckpointsComponent implements OnInit {
 
     this.saving = true;
 
-    // odmah šalje u backend
     this.tourService.addKeyPoint(this.tourId, checkpoint).subscribe({
       next: (savedCheckpoint) => {
-        console.log('Checkpoint successfully added to DB:', savedCheckpoint);
+        // Dodaj checkpoint u listu i update referencu za mapu
         this.checkpoints = [...this.checkpoints, savedCheckpoint];
-
+        this.updateMapMarkers();
+        this.calculateDurations();
         this.resetForm();
         this.saving = false;
       },
@@ -79,52 +82,75 @@ export class AddTourCheckpointsComponent implements OnInit {
     });
   }
 
+  handleCheckpointRemoved(index: number): void {
+    if (index >= 0 && index < this.checkpoints.length) {
+      this.checkpoints.splice(index, 1);
+      this.updateMapMarkers();
+      this.calculateDurations();
+    }
+  }
+
+  updateMapMarkers(): void {
+    if (this.mapComponent) {
+      // Kreira novu referencu da Angular detektuje promenu
+      this.mapComponent.addedCheckpointCollection = [...this.checkpoints];
+    }
+  }
+
+  calculateDurations(): void {
+    if (!this.tourDistanceKm) return;
+
+    const speedMap: Record<TransportType, number> = {
+      [TransportType.Walk]: 5,
+      [TransportType.Bike]: 15,
+      [TransportType.Car]: 60
+    };
+
+    const durationMinutes = Math.ceil((this.tourDistanceKm / speedMap[this.selectedTransport]) * 60);
+
+    const existingIndex = this.durations.findIndex(d => d.transport === this.selectedTransport);
+    if (existingIndex >= 0) {
+      this.durations[existingIndex].duration = durationMinutes;
+    } else {
+      this.durations.push({ transport: this.selectedTransport, duration: durationMinutes });
+    }
+
+    // Update tour durations u backend-u
+    if (this.tourId) {
+      const durationObservables = this.durations.map(d => this.tourService.addDuration(this.tourId, d));
+      Promise.all(durationObservables.map(obs => obs.toPromise()))
+        .then(() => console.log('Durations updated', this.durations))
+        .catch(err => console.error('Failed to update durations', err));
+    }
+  }
+
+  onTransportChange(transport: TransportType) {
+    this.selectedTransport = transport;
+    this.calculateDurations();
+  }
+
   onLocationSelected(location: { lat: number; lng: number }) {
     this.checkpointForm.get('latitude')?.setValue(location.lat.toString());
     this.checkpointForm.get('longitude')?.setValue(location.lng.toString());
   }
 
-  resetForm(): void {
-    this.checkpointForm.reset();
-  }
+  resetForm(): void { this.checkpointForm.reset(); }
 
-  cancelTour(): void {
-    this.router.navigate(['/addNewTour']);
-  }
+  cancelTour(): void { this.router.navigate(['/addNewTour']); }
 
   onRouteDistanceUpdated(distanceKm: number) {
     this.tourDistanceKm = distanceKm;
-    console.log('Route distance updated:', distanceKm, 'km');
+    this.calculateDurations();
   }
 
-  handleCheckpointRemoved(index: number): void {
-    if (index >= 0 && index < this.checkpoints.length) {
-      this.checkpoints.splice(index, 1);
-      console.log('Checkpoint removed:', index);
-    }
-  }
-
-  toggleHelpModal() {
-    this.isHelpModalOpen = !this.isHelpModalOpen;
-  }
+  toggleHelpModal() { this.isHelpModalOpen = !this.isHelpModalOpen; }
 
   finalizeTour(): void {
-    if (!this.tour || this.checkpoints.length < 2) {
-      console.error('Tour missing or less than 2 checkpoints');
-      return;
-    }
-
-    console.log('Finalizing tour with checkpoints:', this.checkpoints);
+    if (!this.tour || this.checkpoints.length < 2) return;
 
     this.tourService.updateDistance(this.tourId, this.tourDistanceKm).subscribe({
-      next: (updatedTour) => {
-        console.log('Tour finalized with distance:', updatedTour);
-        this.router.navigate(['/tours/author-tours']);
-      },
-      error: (err) => {
-        console.error('Failed to finalize tour:', err);
-      }
+      next: () => this.router.navigate(['/tours/author-tours']),
+      error: (err) => console.error('Failed to finalize tour:', err)
     });
   }
-
 }

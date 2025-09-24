@@ -33,6 +33,9 @@ func initDB() *gorm.DB {
 		log.Fatal("Failed to connect to database:", err)
 	}
 
+	// Aktiviraj uuid-ossp extension u Postgres-u
+	db.Exec("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";")
+
 	// Migracije
 	db.AutoMigrate(&model.Tour{})
 	db.AutoMigrate(&model.KeyPoint{})
@@ -136,6 +139,11 @@ func startServer(
 	api.HandleFunc("/tours/executions/abandon", tourExecutionHandler.AbandonTour).Methods("POST")
 	api.HandleFunc("/tours/executions/check-keypoint", tourExecutionHandler.CheckKeyPoint).Methods("POST")
 	api.HandleFunc("/tours/executions/position", tourExecutionHandler.GetSimulatedPosition).Methods("POST")
+
+	// Update tour distance
+	api.HandleFunc("/tours/{id}/distance", tourHandler.UpdateDistance).Methods("PUT")
+
+	api.HandleFunc("/tours/{id}/price", tourHandler.UpdatePrice).Methods("PUT")
 
 	// Static files
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static/")))
