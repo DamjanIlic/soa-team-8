@@ -84,7 +84,7 @@
 <div class="flex flex-wrap gap-2" *ngIf="(tour.durations?.length ?? 0) > 0">
   <span *ngFor="let d of tour.durations ?? []"
         class="inline-flex items-center px-2 py-1 bg-yellow-50 text-yellow-800 text-xs rounded">
-    ⏱ {{ d.transport | titlecase }}: {{ d.duration }} min
+    ⏱ {{ d.transport | titlecase }}: {{ d.minutes }} min
   </span>
 </div>
 

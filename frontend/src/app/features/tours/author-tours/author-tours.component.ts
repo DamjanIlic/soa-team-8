@@ -10,6 +10,7 @@ interface TourCheckpoint extends Checkpoint {
 }
 
 interface TourDuration extends Duration {
+  transport: string;
   saved?: boolean;
 }
 
@@ -73,9 +74,9 @@ export class AuthorToursComponent implements OnInit {
             checkpoints: (t.checkpoints ?? []).map(kp => ({ ...kp })) as TourCheckpoint[],
             durations: Object.values(
               (t.durations ?? []).reduce((acc: Record<string, TourDuration>, d: any) => {
-                const transport = d.transport ?? d.transport_type;
-                const duration = (d.duration ?? d.minutes ?? 0);
-                acc[transport] = { transport, duration };
+              const transport = d.transport ?? d.transport_type;
+              const duration = d.duration ?? d.minutes ?? 0;
+              acc[transport] = { ...d, transport, duration } as TourDuration;
                 return acc;
               }, {})
             ) as TourDuration[],

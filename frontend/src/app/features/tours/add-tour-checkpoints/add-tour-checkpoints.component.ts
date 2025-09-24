@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { Checkpoint } from '../../../core/models/checkpoint.model';
 import { Duration, Tour } from '../../../core/models/tour.model';
 import { TourService } from '../../../core/services/tour.service';
@@ -108,19 +109,33 @@ export class AddTourCheckpointsComponent implements OnInit {
 
     const durationMinutes = Math.ceil((this.tourDistanceKm / speedMap[this.selectedTransport]) * 60);
 
+    // Ispravka: koristi 'minutes' umesto 'duration' i 'transport_type' umesto 'transport'
+    const durationData = { 
+      transport: this.selectedTransport, 
+      minutes: durationMinutes 
+    };
+
     const existingIndex = this.durations.findIndex(d => d.transport === this.selectedTransport);
     if (existingIndex >= 0) {
-      this.durations[existingIndex].duration = durationMinutes;
+      this.durations[existingIndex].minutes = durationMinutes;
     } else {
-      this.durations.push({ transport: this.selectedTransport, duration: durationMinutes });
+      this.durations.push(durationData);
     }
 
     // Update tour durations u backend-u
     if (this.tourId) {
-      const durationObservables = this.durations.map(d => this.tourService.addDuration(this.tourId, d));
-      Promise.all(durationObservables.map(obs => obs.toPromise()))
-        .then(() => console.log('Durations updated', this.durations))
-        .catch(err => console.error('Failed to update durations', err));
+      const durationObservables = this.durations.map(d => 
+        this.tourService.addDuration(this.tourId, {
+          transport: d.transport,
+          minutes: d.minutes
+        })
+      );
+      
+      // Ispravka: koristi forkJoin umesto deprecated toPromise()
+      forkJoin(durationObservables).subscribe({
+        next: () => console.log('Durations updated', this.durations),
+        error: (err) => console.error('Failed to update durations', err)
+      });
     }
   }
 
